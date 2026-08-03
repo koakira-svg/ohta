@@ -231,7 +231,8 @@
   .miss-none{ text-align:center; padding:16px 10px; border-radius:16px; background:var(--spirit-dim); border:2px solid #b8f2e2; color:#0a5c47; font-size:13.5px; font-weight:800; margin-bottom:16px; }
 
   .btn-row{ display:flex; gap:10px; }
-  .btn{ flex:1; font-family:var(--font-display); font-weight:800; font-size:14.5px; padding:15px; border-radius:16px; border:none; cursor:pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s; }
+  .btn{ flex:1; font-family:var(--font-display); font-weight:800; font-size:14.5px; padding:15px; border-radius:16px; border:none; cursor:pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s; white-space:nowrap; }
+  #taStartBtn{ font-size:13.5px; padding:15px 8px; }
   .btn:active{ transform: scale(0.96); }
   .btn:disabled{ opacity:.35; cursor:default; }
   .btn-primary{ background: linear-gradient(135deg, var(--spirit), #2bc9a0); color:#fff; box-shadow: 0 8px 18px rgba(51,217,174,0.35); }
@@ -241,7 +242,8 @@
   .btn-pet{ background: linear-gradient(135deg, var(--pink), #c39bff); color:#fff; box-shadow: 0 8px 18px rgba(255,127,166,0.35); }
   .btn-timeattack{ background: linear-gradient(135deg, #ff8c42, #ff5d73); color:#fff; box-shadow: 0 8px 18px rgba(255,93,115,0.35); }
   .countdown-overlay{ position:absolute; inset:0; background:rgba(255,255,255,0.95); border-radius:26px; display:flex; align-items:center; justify-content:center; z-index:20; }
-  .countdown-num{ font-family:var(--font-display); font-weight:800; font-size:88px; color:var(--gold); text-shadow:0 4px 0 #fff, 0 8px 18px rgba(0,0,0,0.18); }
+  .countdown-num{ font-family:var(--font-display); font-weight:800; font-size:88px; color:var(--gold); text-shadow:0 4px 0 #fff, 0 8px 18px rgba(0,0,0,0.18); white-space:nowrap; }
+  .countdown-num.go{ font-size:42px; }
   .countdown-num.pop{ animation: countdownPop .8s cubic-bezier(.2,.9,.25,1.4); }
   @keyframes countdownPop{ 0%{ transform:scale(.3); opacity:0;} 40%{ transform:scale(1.2); opacity:1;} 70%{ transform:scale(1);} 100%{ transform:scale(1); opacity:1;} }
 
@@ -716,11 +718,12 @@
         <div class="bank-value" id="taScore">0</div>
       </div>
       <div class="delta-badge">
-        <div class="delta-num pos" id="taLives">❤️❤️❤️</div>
-        <div class="delta-label">残りライフ</div>
+        <div class="delta-num pos" id="taComboNum">0</div>
+        <div class="delta-label">コンボ</div>
       </div>
     </div>
 
+    <div class="qdots" id="taDots"></div>
     <div class="combo-wrap"><div class="combo-pop" id="taComboPop"></div></div>
 
     <div class="card frame" id="taCard">
@@ -1697,9 +1700,11 @@ function finishRound(){
   showScreen('result');
 }
 
-/* ============ TIME ATTACK MODE (score-based, separate from yen) ============ */
-const TA_BASE_SCORE = 100;
-let ta = { score:0, combo:0, maxCombo:0, lives:3, correctCount:0, questionCount:0, prevWordId:null, qStart:0, currentWord:null };
+/* ============ TIME ATTACK / CHALLENGE MODE (score-based, separate from yen) ============ */
+const TA_BASE_SCORE = 130;
+const TA_ROUND_SIZE = 10;
+let ta = { words:[], index:0, score:0, combo:0, maxCombo:0, correctCount:0, mistakeCount:0,
+           streakBaseSum:0, streakAwarded:0, qStart:0, currentWord:null };
 let taTimerRAF = null;
 
 async function loadTAScores(){
@@ -1708,14 +1713,18 @@ async function loadTAScores(){
 }
 async function saveTAScores(scores){ await storageSet('kotodama-ta-scores', JSON.stringify(scores)); }
 
-function pickTAWord(){
-  let w;
-  do{ w = WORD_BANK[Math.floor(Math.random()*WORD_BANK.length)]; }
-  while(WORD_BANK.length>1 && w.id===ta.prevWordId);
-  ta.prevWordId = w.id;
-  return w;
+function pickTAWords(){
+  const pool = WORD_BANK.slice();
+  const chosen = [];
+  for(let i=0;i<TA_ROUND_SIZE && pool.length>0;i++){
+    const idx = Math.floor(Math.random()*pool.length);
+    chosen.push(pool[idx]);
+    pool.splice(idx,1);
+  }
+  return chosen;
 }
-function taComboMultiplier(combo){ return Math.min(1 + (combo-1)*0.1, 3.0); }
+// exponential, retroactive combo multiplier: each step roughly doubles the whole streak's value
+function taComboMultiplier(combo){ return Math.pow(2, Math.max(combo-1,0)); }
 function taSpeedMultiplier(elapsedMs){
   if(elapsedMs <= FAST_THRESHOLD) return 1.5;
   if(elapsedMs >= SPEED_WINDOW_BASE) return 1.0;
@@ -1724,7 +1733,14 @@ function taSpeedMultiplier(elapsedMs){
 }
 function updateTAHud(){
   document.getElementById('taScore').textContent = ta.score;
-  document.getElementById('taLives').textContent = '❤️'.repeat(Math.max(ta.lives,0)) + '🖤'.repeat(3-Math.max(ta.lives,0));
+  document.getElementById('taComboNum').textContent = ta.combo;
+}
+function buildTADots(){
+  const wrap = document.getElementById('taDots'); wrap.innerHTML = '';
+  ta.words.forEach((_,i)=>{ const d=document.createElement('div'); d.className='qdot'+(i===0?' current':''); d.id='ta-dot-'+i; wrap.appendChild(d); });
+}
+function updateTADots(){
+  ta.words.forEach((_,i)=>{ const d=document.getElementById('ta-dot-'+i); if(d){ d.classList.remove('current'); if(i===ta.index) d.classList.add('current'); } });
 }
 function startTATimerBar(){
   const fill = document.getElementById('taTimerFill');
@@ -1747,7 +1763,9 @@ function showTAFloat(text, cls){
 }
 
 function startTimeAttack(){
-  ta = { score:0, combo:0, maxCombo:0, lives:3, correctCount:0, questionCount:0, prevWordId:null, qStart:0, currentWord:null };
+  ta = { words: pickTAWords(), index:0, score:0, combo:0, maxCombo:0, correctCount:0, mistakeCount:0,
+         streakBaseSum:0, streakAwarded:0, qStart:0, currentWord:null };
+  buildTADots();
   showScreen('timeattack');
   renderTAQuestion();
 }
@@ -1764,7 +1782,8 @@ function startTAWithCountdown(){
   let count = 3;
   function step(){
     numEl.textContent = count>0 ? String(count) : 'スタート！';
-    numEl.classList.remove('pop'); void numEl.offsetWidth; numEl.classList.add('pop');
+    numEl.classList.remove('pop','go'); void numEl.offsetWidth; numEl.classList.add('pop');
+    if(count<=0) numEl.classList.add('go');
     sfxTap();
     if(count>0){
       count--;
@@ -1781,9 +1800,10 @@ function startTAWithCountdown(){
 
 function renderTAQuestion(){
   updateTAHud();
-  const w = pickTAWord();
+  updateTADots();
+  const w = ta.words[ta.index];
   ta.currentWord = w;
-  document.getElementById('taTag').textContent = w.type + '　' + (ta.questionCount+1) + '問目';
+  document.getElementById('taTag').textContent = w.type + '　' + (ta.index+1) + '/' + ta.words.length;
   document.getElementById('taWord').textContent = w.en;
   document.getElementById('taFeedbackLine').textContent = '';
   document.getElementById('taFeedbackLine').className = 'feedback-line';
@@ -1818,32 +1838,42 @@ function onTAAnswer(selected, correctWord, btnEl, wrap){
   const card = document.getElementById('taCard');
   const orb = document.getElementById('taOrb');
   const fb = document.getElementById('taFeedbackLine');
-  ta.questionCount++;
+  const dot = document.getElementById('ta-dot-'+ta.index);
 
   if(isCorrect){
     sfxAnswerCorrect();
     ta.combo++; ta.maxCombo = Math.max(ta.maxCombo, ta.combo); ta.correctCount++;
     const sMult = taSpeedMultiplier(elapsed);
+    const base = Math.round(TA_BASE_SCORE * sMult);
+    ta.streakBaseSum += base;
     const cMult = taComboMultiplier(ta.combo);
-    const gained = Math.round(TA_BASE_SCORE * sMult * cMult);
+    const newStreakTotal = Math.round(ta.streakBaseSum * cMult);
+    const gained = newStreakTotal - ta.streakAwarded; // includes retroactive bonus applied to the whole streak
+    ta.streakAwarded = newStreakTotal;
     ta.score += gained;
+
     btnEl.classList.add('correct');
     const burstEmoji = DIFF_BURST_EMOJI[correctWord.diff] || '⭐';
-    burstEmojiFromOrb(burstEmoji, 10, 6, 'taOrb');
+    const isBigBonus = ta.combo>=3 && gained > base*1.8;
+    burstEmojiFromOrb(burstEmoji, isBigBonus?16:10, isBigBonus?9:6, 'taOrb');
     fb.textContent = sMult>=1.4 ? '⚡ はやい！正解！' : '正解！';
     fb.className = 'feedback-line good';
     showTAFloat('+'+gained, 'good');
+    if(dot) dot.classList.add('done-correct');
     sfxCoin(sMult>=1.4?1:0);
     if(ta.combo>=2){
       sfxCombo(Math.min(ta.combo,8));
       const pop = document.getElementById('taComboPop');
-      pop.textContent = ta.combo + ' 連続 正解！ x' + cMult.toFixed(2);
+      pop.textContent = ta.combo + ' 連続 正解！ x' + cMult.toFixed(1);
       pop.classList.remove('show'); void pop.offsetWidth; pop.classList.add('show');
+      if(isBigBonus) showBigToast('🔥 さかのぼりボーナス！<br>+'+gained, 'jackpot');
     }
   } else {
     sfxAnswerWrong();
     ta.combo = 0;
-    ta.lives--;
+    ta.streakBaseSum = 0;
+    ta.streakAwarded = 0;
+    ta.mistakeCount++;
     btnEl.classList.add('wrong');
     Array.from(wrap.children).forEach(c=>{ const label=c.querySelector('span:last-child').textContent; if(label===correctWord.ja) c.classList.add('correct'); });
     orb.classList.add('pulse-wrong');
@@ -1851,13 +1881,15 @@ function onTAAnswer(selected, correctWord, btnEl, wrap){
     fb.textContent = '正解は「'+correctWord.ja+'」だよ';
     fb.className = 'feedback-line bad';
     showTAFloat('ミス！', 'bad');
+    if(dot) dot.classList.add('done-wrong');
   }
   updateTAHud();
 
   setTimeout(()=>{
-    if(!isCorrect && ta.lives<=0){ finishTimeAttack(); }
+    ta.index++;
+    if(ta.index >= ta.words.length){ finishTimeAttack(); }
     else { renderTAQuestion(); }
-  }, isCorrect ? 700 : 1200);
+  }, isCorrect ? 750 : 1200);
 }
 
 function renderTALeaderboard(top3, elId){
@@ -1873,7 +1905,6 @@ function renderTALeaderboard(top3, elId){
 async function finishTimeAttack(){
   if(taTimerRAF) cancelAnimationFrame(taTimerRAF);
   const scores = await loadTAScores();
-  const isRecord = scores.length<3 || scores.some(s=> ta.score > s.score) || scores.length===0;
   const worstOfTop3 = scores.length>=3 ? Math.min(...scores.slice(0,3).map(s=>s.score)) : -1;
   const madeTop3 = scores.length<3 || ta.score > worstOfTop3;
   scores.push({ score: ta.score, combo: ta.maxCombo, date: Date.now() });
@@ -1881,11 +1912,11 @@ async function finishTimeAttack(){
   const top3 = scores.slice(0,3);
   await saveTAScores(top3);
 
-  document.getElementById('taResultHeadline').textContent = madeTop3 ? '🏆 新しい 記録！' : 'ゲームオーバー';
-  document.getElementById('taResultSub').textContent = ta.questionCount + '問 ちょうせん';
+  document.getElementById('taResultHeadline').textContent = madeTop3 ? '🏆 新しい 記録！' : 'チャレンジ 終了！';
+  document.getElementById('taResultSub').textContent = ta.correctCount + '/' + ta.words.length + '問 正解（ミス ' + ta.mistakeCount + '回）';
   document.getElementById('taFinalScore').textContent = ta.score;
   document.getElementById('taFinalCombo').textContent = ta.maxCombo;
-  document.getElementById('taFinalCorrect').textContent = ta.correctCount;
+  document.getElementById('taFinalCorrect').textContent = ta.correctCount + '/' + ta.words.length;
   document.getElementById('taNewRecordBanner').classList.toggle('hidden', !madeTop3);
   if(madeTop3){ setTimeout(sfxTierUp, 200); setTimeout(()=> confettiRain(50, CONFETTI_WARM), 200); }
   renderTALeaderboard(top3);
