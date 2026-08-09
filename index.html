@@ -100,6 +100,21 @@
   .choice-btn.correct{ background:var(--ok) !important; color:#08281a !important; }
   .choice-btn.wrong{ background:var(--danger) !important; color:#fff !important; }
 
+  /* カウントダウン表示用スタイル */
+  .countdown-num {
+    font-size: 64px;
+    font-weight: 900;
+    color: var(--yellow-dark);
+    line-height: 1;
+    margin: 10px 0;
+    animation: popCount 0.4s ease;
+  }
+  @keyframes popCount {
+    0% { transform: scale(0.5); opacity: 0; }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
   /* 工場・コンベアアニメーションエリア */
   .conveyor-area{
     margin-top:10px; background:#181e26; border-radius:10px; border:2px solid var(--steel-light);
@@ -291,7 +306,6 @@ function playSE(type) {
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.start(now); osc.stop(now + 0.3);
     } else if (type === 'press') {
-      // プレス機械音
       osc.type = 'square';
       osc.frequency.setValueAtTime(100, now);
       osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
@@ -304,6 +318,18 @@ function playSE(type) {
       gain.gain.setValueAtTime(0.2, now);
       gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.start(now); osc.stop(now + 0.3);
+    } else if (type === 'count') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(440, now); // A4
+      gain.gain.setValueAtTime(0.1, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.start(now); osc.stop(now + 0.15);
+    } else if (type === 'start') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now); // A5
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.start(now); osc.stop(now + 0.4);
     }
   } catch(e) {}
 }
@@ -338,8 +364,8 @@ const RAW_WORDS = [
 ["lives","life の複数形"],["creativity","創造性"],["chef","シェフ"],["variation","変化"],
 ["create","〜を創造する"],["sauce","ソース"],["traveler","旅行者"],["resident","居住者"],
 ["menu","メニュー"],["Singapore","シンガポール"],["went","go の過去形"],["was","is, am の過去形"],
-["were","are の過去形"],["had","have の過去形"],["saw","see の過去形"],["bought","buy の過去形"],
-["did","do の過去形"],["came","come の過去形"],["made","make の過去形"],["took","take の過去形"],
+["were","are の過去形"],["had","have の過去形"],["saw","see の過去形"],["bought","buy の過去形"],["did","do の過去形"],
+["came","come の過去形"],["made","make の過去形"],["took","take の過去形"],
 ["there is (are)","〜がある"],["world","世界"],["interesting","面白い"],["enjoy","楽しむ"],
 ["different","異なった"],["English","英語"],["leave","出発する"],["family","家族"],
 ["brother","兄弟"],["open","〜を開く"],["breakfast","朝食"],["people","人々"],
@@ -360,7 +386,6 @@ const WORD_BANK = RAW_WORDS.map(([en,ja],i)=>({
   id: i, en, ja: ja.replace(/[（(][^）)]*[）)]/g, '').trim(), level: calcLevel(en, ja)
 }));
 
-// 学習データ管理
 function getClearedWords() {
   return JSON.parse(localStorage.getItem('wf_cleared_words') || '[]');
 }
@@ -373,7 +398,7 @@ function markWordCleared(wordId) {
 }
 
 /* ================= 4. CAR PRODUCTION ANIMATION ================= */
-const CAR_COLORS = ['#e74c3c', '#3498db', '#f1c40f', '#ecf0f1', '#95a5a6']; // 赤, 青, 黄, 白, グレー
+const CAR_COLORS = ['#e74c3c', '#3498db', '#f1c40f', '#ecf0f1', '#95a5a6'];
 
 function getRandomCarSVG(color) {
   const types = ['sedan', 'wagon', 'truck'];
@@ -392,7 +417,7 @@ function getRandomCarSVG(color) {
       <rect x="20" y="8" width="10" height="4" fill="#fff" opacity="0.6"/>
       <circle cx="10" cy="18" r="3" fill="#333"/><circle cx="30" cy="18" r="3" fill="#333"/>
     </svg>`;
-  } else { // sedan
+  } else {
     return `<svg viewBox="0 0 40 24" width="40" height="24">
       <path d="M4 12 Q8 6 16 6 L26 6 Q32 10 36 12 L36 18 L4 18 Z" fill="${color}"/>
       <rect x="12" y="8" width="12" height="4" fill="#fff" opacity="0.6"/>
@@ -406,21 +431,18 @@ function spawnCarAnimation() {
   const belt = document.getElementById('conveyorBelt');
   const container = document.getElementById('carContainer');
 
-  // プレスアニメーション
   press.classList.add('active');
   playSE('press');
 
   setTimeout(() => {
     press.classList.remove('active');
     
-    // 車生成
     const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     const car = document.createElement('div');
     car.className = 'car-item';
     car.innerHTML = getRandomCarSVG(color);
     container.appendChild(car);
 
-    // ベルトコンベア稼働
     belt.classList.add('running');
     setTimeout(() => {
       car.style.left = (60 + container.children.length * 35) + 'px';
@@ -437,7 +459,7 @@ function clearCars() {
   document.getElementById('carContainer').innerHTML = '';
 }
 
-/* ================= 5. GAME LOGIC ================= */
+/* ================= 5. GAME LOGIC & COUNTDOWN ================= */
 let playerName = localStorage.getItem('wordfactory_player_name') || '';
 document.getElementById('playerName').value = playerName;
 
@@ -463,9 +485,45 @@ function startGame(mode) {
   chal.index = 0; chal.score = 0; chal.combo = 0; chal.correct = 0;
 
   document.getElementById('chModeBadge').textContent = mode === 'easy' ? 'EASY' : 'NORMAL';
+  document.getElementById('chQNum').textContent = `1/10`;
+  document.getElementById('chScore').textContent = '0';
+  document.getElementById('chCombo').textContent = '0';
+  document.getElementById('chTimerFill').style.width = '100%';
   clearCars();
   showScreen('screen-challenge');
-  renderQuestion();
+
+  // カウントダウン開始
+  startCountdown(() => {
+    renderQuestion();
+  });
+}
+
+function startCountdown(onComplete) {
+  const tagEl = document.getElementById('chTag');
+  const promptEl = document.getElementById('chPrompt');
+  const choicesEl = document.getElementById('chChoices');
+
+  tagEl.textContent = 'ライン稼働準備中...';
+  choicesEl.innerHTML = ''; // 選択肢を隠す
+
+  let count = 3;
+  
+  function updateCount() {
+    if (count > 0) {
+      playSE('count');
+      promptEl.innerHTML = `<div class="countdown-num">${count}</div>`;
+      count--;
+      setTimeout(updateCount, 800);
+    } else {
+      playSE('start');
+      promptEl.innerHTML = `<div class="countdown-num" style="color:var(--ok); font-size:48px;">START!</div>`;
+      setTimeout(() => {
+        onComplete();
+      }, 600);
+    }
+  }
+
+  updateCount();
 }
 
 function renderQuestion() {
@@ -529,13 +587,12 @@ function answer(btn, isCorrect) {
     playSE('correct');
     btn.classList.add('correct');
     chal.combo++; chal.correct++;
-    markWordCleared(w.id); // 正解した単語を進捗保存
+    markWordCleared(w.id);
     
     const elapsed = performance.now() - chal.qStart;
     const speedBonus = Math.max(10, Math.floor((CH_TIME_MS - elapsed) / 10));
     chal.score += Math.round((100 + speedBonus) * chal.combo * 18 * (currentMode === 'easy' ? 0.6 : 1.0));
 
-    // 車生産アニメーション
     spawnCarAnimation();
 
   } else {
