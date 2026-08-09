@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>英単語工場 | 100語クリアを目指せ</title>
+<!-- Firebase SDK (オンラインランキング用) -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+<style>
+  :root{
+    --steel-dark:#171d24;
+    --steel:#232c36;
+    --steel-mid:#2f3a46;
+    --steel-light:#3d4b59;
+    --panel:#eee7d8;
+    --panel-2:#f7f2e6;
+    --yellow:#ffc233;
+    --yellow-dark:#c98e00;
+    --ok:#3fae74;
+    --danger:#e2493d;
+    --ink:#1b222b;
+    --ink-dim:#5c6773;
+    --ink-faint:#8894a0;
+    --font-display:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+    --font-body:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic","Meiryo",sans-serif;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    min-height:100vh;
+    background:
+      radial-gradient(circle at 20% -10%, rgba(255,194,51,0.10), transparent 45%),
+      linear-gradient(180deg,var(--steel-dark),var(--steel) 40%,var(--steel-mid) 100%);
+    color:var(--panel-2);
+    font-family:var(--font-body);
+    display:flex;
+    justify-content:center;
+    padding:18px 12px 50px;
+    position:relative;
+    overflow-x:hidden;
+  }
+  .stage{ position:relative; z-index:1; width:100%; max-width:460px; }
+  h1,h2,h3{ font-family:var(--font-display); margin:0; }
+  button, input{ font-family:var(--font-body); }
+
+  .screen{ display:none; }
+  .screen.active{ display:block; animation: fadeIn .35s ease; }
+  @keyframes fadeIn{ from{ opacity:0; transform:translateY(6px);} to{ opacity:1; transform:translateY(0);} }
+
+  /* TITLE */
+  .plant{
+    position:relative; height:130px; margin-bottom:6px;
+    background: linear-gradient(180deg, #4a5a6b 0%, #2a3440 70%, #1c242d 100%);
+    border-radius:14px; overflow:hidden;
+    border:3px solid var(--steel-light);
+  }
+  .plant-building{ position:absolute; bottom:0; left:0; right:0; height:70px; background:#333f4c; border-top:3px solid var(--yellow); }
+  
+  .title-wrap{ text-align:center; padding:10px 4px 4px; }
+  .title-main{ font-size:28px; font-weight:900; color:var(--panel-2); margin:4px 0 2px; }
+  .title-sub{ font-size:12px; color:var(--ink-faint); margin-bottom:14px; }
+
+  .name-input-wrap{ margin-bottom:12px; text-align:left; }
+  .name-input-wrap label{ font-size:12px; font-weight:bold; color:var(--yellow); display:block; margin-bottom:4px; }
+  .name-input{ width:100%; padding:10px; border-radius:8px; border:2px solid var(--steel-light); background:var(--panel-2); color:var(--ink); font-weight:bold; font-size:15px; }
+
+  .mode-select-btns{ display:flex; gap:10px; margin-bottom:12px; }
+  .start-btn{
+    flex:1; padding:16px 8px; border:none; border-radius:12px;
+    font-weight:900; font-size:16px; cursor:pointer;
+    box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+  }
+  .start-btn.easy{ background: linear-gradient(180deg, #5cdb95, #3fae74); color:#08281a; box-shadow: 0 5px 0 #28734c; }
+  .start-btn.normal{ background: linear-gradient(180deg, var(--yellow), var(--yellow-dark)); color:#241800; box-shadow: 0 5px 0 #8a6300; }
+  .start-btn:active{ transform:translateY(3px); box-shadow:none; }
+
+  /* HUD & CARD */
+  .hud{ display:flex; align-items:center; gap:8px; margin-bottom:10px; }
+  .rank-badge, .streak-badge, .mode-badge{ padding:6px 10px; border-radius:10px; background:var(--steel-mid); border:2px solid var(--steel-light); font-size:12px; font-weight:800; }
+  .mode-badge{ color:var(--yellow); }
+  .yen-badge{ flex:1; text-align:center; background:var(--panel); color:var(--ink); border-radius:10px; padding:6px; border:2px solid var(--yellow-dark); font-weight:900; }
+
+  .card{ background:var(--panel); border-radius:16px; padding:22px 18px; text-align:center; border:3px solid var(--steel-light); }
+  .card-tag{ font-size:11px; font-weight:800; color:var(--ink-dim); margin-bottom:8px; }
+  .prompt{ font-size:26px; font-weight:900; color:var(--ink); }
+
+  .choices{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:16px; }
+  .choice-btn{
+    padding:14px 8px; border-radius:12px; border:2px solid var(--steel-light); background:var(--steel-mid);
+    color:var(--panel-2); font-size:15px; font-weight:700; min-height:56px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .choice-btn.correct{ background:var(--ok); color:#08281a; }
+  .choice-btn.wrong{ background:var(--danger); color:#2c0a08; }
+
+  /* LEADERBOARD */
+  .lb-panel{ background:var(--steel-mid); border:2px solid var(--steel-light); border-radius:12px; padding:12px; margin-top:14px; text-align:left; max-height:200px; overflow-y:auto; }
+  .lb-title{ font-size:12px; font-weight:800; color:var(--yellow); margin-bottom:8px; }
+  .lb-row{ display:flex; align-items:center; justify-content:space-between; background:var(--panel-2); border-radius:6px; padding:6px 10px; margin-bottom:4px; color:var(--ink); font-size:13px; }
+  .lb-rank{ font-weight:bold; width:30px; }
+  .lb-name{ flex:1; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .lb-score{ font-weight:900; color:var(--yellow-dark); }
+
+  .timer-track{ height:8px; border-radius:4px; background:var(--steel-dark); overflow:hidden; margin-bottom:10px; }
+  .timer-fill{ height:100%; width:100%; background:var(--ok); }
+  
+  .btn-row{ display:flex; gap:10px; margin-top:12px; }
+  .btn-primary, .btn-ghost{ flex:1; padding:12px; border-radius:8px; font-weight:bold; border:none; cursor:pointer; }
+  .btn-primary{ background:var(--yellow); color:#241800; }
+  .btn-ghost{ background:var(--steel-mid); color:var(--panel-2); border:2px solid var(--steel-light); }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <!-- TITLE SCREEN -->
+  <section class="screen active" id="screen-title">
+    <div class="plant">
+      <div class="plant-building"></div>
+    </div>
+    <div class="title-wrap">
+      <h1 class="title-main">英単語工場</h1>
+      <div class="title-sub">日本語の意味に合う英語を選ぼう！</div>
+      
+      <div class="name-input-wrap">
+        <label for="playerName">プレイヤー名（ランキングに掲載）</label>
+        <input type="text" id="playerName" class="name-input" maxlength="10" placeholder="なまえを入力">
+      </div>
+
+      <div class="mode-select-btns">
+        <button class="start-btn easy" onclick="startGame('easy')">
+          Easy モード ▶
+        </button>
+        <button class="start-btn normal" onclick="startGame('normal')">
+          Normal モード ▶
+        </button>
+      </div>
+
+      <div class="lb-panel">
+        <div class="lb-title">🏆 ランキング TOP 100</div>
+        <div id="lbList">読み込み中...</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- GAME SCREEN -->
+  <section class="screen" id="screen-challenge">
+    <div class="hud">
+      <div class="mode-badge" id="chModeBadge">EASY</div>
+      <div class="rank-badge"><span id="chQNum">1/10</span></div>
+      <div class="yen-badge">⭐ <span id="chScore">0</span> pt</div>
+      <div class="streak-badge">🔥 <span id="chCombo">0</span></div>
+    </div>
+    <div class="card">
+      <div class="timer-track"><div class="timer-fill" id="chTimerFill"></div></div>
+      <div class="card-tag" id="chTag">この日本語の意味になる英語は？</div>
+      <div class="prompt" id="chPrompt">単語</div>
+      <div class="choices" id="chChoices"></div>
+    </div>
+  </section>
+
+  <!-- RESULT SCREEN -->
+  <section class="screen" id="screen-result">
+    <div class="card">
+      <h2>結果発表</h2>
+      <p id="resultSub">10問中 0問 正解</p>
+      <h1 id="finalScore" style="color:var(--yellow-dark); font-size:36px; margin:10px 0;">0 pt</h1>
+      
+      <div class="lb-panel">
+        <div class="lb-title">🏆 ランキング TOP 100</div>
+        <div id="resultLbList"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn-ghost" id="btnToTitle">タイトルへ</button>
+        <button class="btn-primary" id="btnRetry">もう一度 ▶</button>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+/* ================= 1. FIREBASE CONFIG (設定適用済み) ================= */
+const firebaseConfig = {
+  apiKey: "AIzaSyCVn9oVDxZT-k5bL1BS-6aKTvDpSFb1vD0",
+  authDomain: "e-test-c55d4.firebaseapp.com",
+  databaseURL: "https://e-test-c55d4-default-rtdb.firebaseio.com",
+  projectId: "e-test-c55d4",
+  storageBucket: "e-test-c55d4.firebasestorage.app",
+  messagingSenderId: "6250039571",
+  appId: "1:6250039571:web:b9786c701f76b1f63bb2e6",
+  measurementId: "G-BLBJC7NWZ0"
+};
+
+let db = null;
+try {
+  if (firebaseConfig.apiKey && firebaseConfig.apiKey !== "YOUR_API_KEY") {
+    firebase.initializeApp(firebaseConfig);
+    db = firebase.database();
+  }
+} catch(e) { console.log("Firebase not initialized", e); }
+
+/* ================= 2. WORD BANK (100語) ================= */
+const RAW_WORDS = [
+["same","同じ"],["experience","経験、体験"],["actually","実は"],["by the way","ところで"],
+["holiday","休日"],["arrive","到着する"],["soon","すぐに"],["will","〜でしょう"],
+["excited","わくわくした"],["See you.","またね"],["tall","高さがある"],["find","見つける"],
+["found","find の過去形"],["language","言語"],["for example","例えば"],["area","エリア"],
+["culture","文化"],["and so on","〜など"],["speech","スピーチ"],["if","もしも"],
+["would love to","〜したい"],["be interested in","〜に興味がある"],["kind(s) of","種類の"],["forget","忘れる"],
+["because","〜だから"],["thick","厚い、とろっとした"],["early","早い"],["foreign","外国の"],
+["change","変化する"],["come from","〜出身である"],["Here is","これが〜です"],["name ~ after …","〜にちなんで〜と名付ける"],
+["may","〜しても良い"],["ask ~ a favor","〜にお願いする"],["could","can の過去形"],["Say cheese!","はい、チーズ！"],
+["golden","金色の"],["flight","飛行"],["See you.","またね"],["airport","空港"],
+["seafood","シーフード"],["reservation","予約"],["meter","メートル"],["weigh","重さがある"],
+["ton","トン"],["dollar","ドル"],["communicate","意思疎通をする"],["painting","絵"],
+["wall","壁"],["surprised","驚いた"],["especially","特に"],["order","〜を注文する"],
+["topping","トッピング"],["various","いろいろな"],["flavor","味"],["soy sauce","しょうゆ"],
+["salt","塩"],["sometime","いつか"],["add","〜を加える"],["butter","バター"],
+["recommended","おすすめの"],["manufacture","製造業者"],["reflect","〜を反映する"],["climate","気候"],
+["life","生活"],["lives","life の複数形"],["creativity","創造性"],["chef","シェフ"],
+["variation","変化"],["create","〜を創造する"],["sauce","ソース"],["traveler","旅行者"],
+["resident","居住者"],["menu","メニュー"],["Singapore","シンガポール"],["went","go の過去形"],
+["was","is, am の過去形"],["were","are の過去形"],["had","have の過去形"],["saw","see の過去形"],["bought","buy の過去形"],["did","do の過去形"],["came","come の過去形"],["made","make の過去形"],
+["took","take の過去形"],["there is (are)","〜がある"],["world","世界"],["interesting","面白い"],
+["enjoy","楽しむ"],["language","言語"],["different","異なった"],["English","英語"],
+["leave","出発する"],["family","家族"],["brother","兄弟"],["open","〜を開く"],
+["breakfast","朝食"],["people","人々"],["know","知っている"],["egg","卵"]
+];
+
+/* 7段階の難易度(レベル1〜7)を判定して付与 */
+function calcLevel(en, ja) {
+  if (en.length <= 4 && !en.includes(' ')) return 1;
+  if (en.length <= 6 && !en.includes(' ')) return 2;
+  if (ja.includes('過去形') || ja.includes('複数形')) return 3;
+  if (en.length <= 8 && !en.includes(' ')) return 4;
+  if (en.length > 8 && !en.includes(' ')) return 5;
+  if (en.includes(' ') && en.split(' ').length <= 2) return 6;
+  return 7; // 3語以上の熟語・構文
+}
+
+const WORD_BANK = RAW_WORDS.map(([en,ja],i)=>({
+  id: i,
+  en,
+  ja: ja.replace(/[（(][^）)]*[）)]/g, '').trim(),
+  level: calcLevel(en, ja)
+}));
+
+/* ================= 3. トラップ単語（ダミー・似たスペル）生成ロジック ================= */
+function generateSimilarWord(word) {
+  if (word.length <= 3) return word + "s";
+  const vowels = ['a','e','i','o','u'];
+  let arr = word.split('');
+  const rand = Math.random();
+  if (rand < 0.4) {
+    for (let i = 1; i < arr.length - 1; i++) {
+      if (vowels.includes(arr[i])) {
+        arr[i] = vowels[(vowels.indexOf(arr[i]) + 1) % vowels.length];
+        break;
+      }
+    }
+  } else if (rand < 0.7) {
+    let idx = Math.floor(Math.random() * (arr.length - 2)) + 1;
+    let temp = arr[idx]; arr[idx] = arr[idx+1]; arr[idx+1] = temp;
+  } else {
+    if (arr[arr.length-1] === 'e') arr.pop(); else arr.push('e');
+  }
+  let res = arr.join('');
+  return res === word ? word + "e" : res;
+}
+
+function buildChoices(correctWord, mode) {
+  const correctVal = correctWord.en;
+  let choices = [correctVal];
+
+  if (mode === 'normal') {
+    // Normalモード: 1つは似たスペルのダミー単語を生成
+    choices.push(generateSimilarWord(correctVal));
+  }
+
+  // 残りは実在する単語・熟語リストから選出
+  const others = WORD_BANK.filter(w => w.en !== correctVal);
+  others.sort(() => Math.random() - 0.5);
+
+  while (choices.length < 4 && others.length > 0) {
+    const candidate = others.pop().en;
+    if (!choices.includes(candidate)) choices.push(candidate);
+  }
+
+  return choices.sort(() => Math.random() - 0.5).map(val => ({
+    val,
+    correct: val === correctVal
+  }));
+}
+
+/* ================= 4. GAME STATE & LOGIC ================= */
+let playerName = localStorage.getItem('wordfactory_player_name') || '';
+document.getElementById('playerName').value = playerName;
+
+let currentMode = 'easy';
+let chal = { words:[], index:0, score:0, combo:0, correct:0, qStart:0, timerRAF:null };
+const CH_TIME_MS = 5000;
+
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function startGame(mode) {
+  currentMode = mode;
+  const nameInput = document.getElementById('playerName').value.trim();
+  playerName = nameInput || '名無しプレイヤー';
+  localStorage.setItem('wordfactory_player_name', playerName);
+
+  // モードごとにピックアップ対象の難易度レベルを変更
+  let pool = [];
+  if (mode === 'easy') {
+    // Easy: 難易度1〜4の比較的一般的な単語から選択
+    pool = WORD_BANK.filter(w => w.level <= 4);
+  } else {
+    // Normal: 全レベルから抽出
+    pool = WORD_BANK;
+  }
+
+  const shuffled = [...pool].sort(() => Math.random() - 0.5);
+  chal.words = shuffled.slice(0, 10);
+  chal.index = 0;
+  chal.score = 0;
+  chal.combo = 0;
+  chal.correct = 0;
+
+  document.getElementById('chModeBadge').textContent = mode === 'easy' ? 'EASY' : 'NORMAL';
+  showScreen('screen-challenge');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const w = chal.words[chal.index];
+  document.getElementById('chQNum').textContent = `${chal.index + 1}/10`;
+  document.getElementById('chScore').textContent = Math.min(chal.score, currentMode==='easy'?600000:1000000).toLocaleString('ja-JP');
+  document.getElementById('chCombo').textContent = chal.combo;
+  document.getElementById('chPrompt').textContent = w.ja;
+
+  document.getElementById('chTag').textContent = `[Lv.${w.level}] この日本語の意味になる英語は？`;
+
+  const choices = buildChoices(w, currentMode);
+  const wrap = document.getElementById('chChoices');
+  wrap.innerHTML = '';
+
+  choices.forEach(ch => {
+    const btn = document.createElement('button');
+    btn.className = 'choice-btn';
+    btn.textContent = ch.val;
+    btn.onclick = () => answer(btn, ch.correct);
+    wrap.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+function startTimer() {
+  const fill = document.getElementById('chTimerFill');
+  fill.style.width = '100%';
+  chal.qStart = performance.now();
+  if (chal.timerRAF) cancelAnimationFrame(chal.timerRAF);
+
+  function step() {
+    const elapsed = performance.now() - chal.qStart;
+    const pct = Math.max(0, 100 - (elapsed / CH_TIME_MS) * 100);
+    fill.style.width = pct + '%';
+    if (pct > 0) {
+      chal.timerRAF = requestAnimationFrame(step);
+    } else {
+      answer(null, false);
+    }
+  }
+  chal.timerRAF = requestAnimationFrame(step);
+}
+
+let locked = false;
+function answer(btn, isCorrect) {
+  if (locked) return;
+  locked = true;
+  if (chal.timerRAF) cancelAnimationFrame(chal.timerRAF);
+
+  const w = chal.words[chal.index];
+  document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
+
+  if (isCorrect && btn) {
+    btn.classList.add('correct');
+    chal.combo++;
+    chal.correct++;
+    
+    const elapsed = performance.now() - chal.qStart;
+    const speedBonus = Math.max(10, Math.floor((CH_TIME_MS - elapsed) / 10));
+    const basePts = (100 + speedBonus) * chal.combo * 18;
+
+    // モード別倍率調整 (Easy時は上限600,000pt以内に収まるスケール設定)
+    const modeMultiplier = currentMode === 'easy' ? 0.6 : 1.0;
+    chal.score += Math.round(basePts * modeMultiplier);
+
+    // 点数の上限カンスト処理
+    const maxCap = currentMode === 'easy' ? 600000 : 1000000;
+    if (chal.score > maxCap) chal.score = maxCap;
+
+  } else {
+    if (btn) btn.classList.add('wrong');
+    document.querySelectorAll('.choice-btn').forEach(b => {
+      if (b.textContent === w.en) b.classList.add('correct');
+    });
+    chal.combo = 0;
+  }
+
+  setTimeout(() => {
+    locked = false;
+    chal.index++;
+    if (chal.index < chal.words.length) {
+      renderQuestion();
+    } else {
+      endGame();
+    }
+  }, 800);
+}
+
+function endGame() {
+  const maxCap = currentMode === 'easy' ? 600000 : 1000000;
+  if (chal.score > maxCap) chal.score = maxCap;
+
+  document.getElementById('resultSub').textContent = `[${currentMode.toUpperCase()}] 10問中 ${chal.correct}問 正解`;
+  document.getElementById('finalScore').textContent = `${chal.score.toLocaleString('ja-JP')} pt`;
+
+  saveScore(playerName, chal.score, currentMode);
+  showScreen('screen-result');
+}
+
+/* ================= 5. RANKING SYSTEM ================= */
+function saveScore(name, score, mode) {
+  if (db) {
+    db.ref('scores').push({ name, score, mode, timestamp: Date.now() });
+  } else {
+    let localScores = JSON.parse(localStorage.getItem('wf_local_scores') || '[]');
+    localScores.push({ name, score, mode });
+    localScores.sort((a,b) => b.score - a.score);
+    localStorage.setItem('wf_local_scores', JSON.stringify(localScores.slice(0, 100)));
+    loadRanking();
+  }
+}
+
+function loadRanking() {
+  if (db) {
+    db.ref('scores').orderByChild('score').limitToLast(100).on('value', snapshot => {
+      let list = [];
+      snapshot.forEach(child => { list.push(child.val()); });
+      list.reverse();
+      renderLbUI(list);
+    });
+  } else {
+    let list = JSON.parse(localStorage.getItem('wf_local_scores') || '[]');
+    renderLbUI(list);
+  }
+}
+
+function renderLbUI(list) {
+  const html = list.length === 0 ? '<div style="font-size:12px;">スコアがありません</div>' :
+    list.map((item, i) => `
+      <div class="lb-row">
+        <span class="lb-rank">${i + 1}位</span>
+        <span class="lb-name">${escapeHtml(item.name)} <small style="opacity:0.6">(${item.mode||'norm'})</small></span>
+        <span class="lb-score">${item.score.toLocaleString('ja-JP')} pt</span>
+      </div>
+    `).join('');
+
+  document.getElementById('lbList').innerHTML = html;
+  document.getElementById('resultLbList').innerHTML = html;
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* EVENTS */
+document.getElementById('btnRetry').onclick = () => startGame(currentMode);
+document.getElementById('btnToTitle').onclick = () => { loadRanking(); showScreen('screen-title'); };
+
+loadRanking();
+</script>
+</body>
+</html>
