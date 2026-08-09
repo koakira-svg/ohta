@@ -374,7 +374,7 @@ function playSE(type) {
 function speakJapanese(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    const speakText = text.replace(/過去形/g, 'かこけい');
+    const speakText = text.replace(/過去形/g, 'かこけい').replace(/複数形/g, 'ふくすうけい');
     const uttr = new SpeechSynthesisUtterance(speakText);
     uttr.lang = 'ja-JP'; uttr.rate = 1.0;
     window.speechSynthesis.speak(uttr);
@@ -602,9 +602,53 @@ function renderQuestion() {
 
 function buildChoices(correctWord, mode) {
   let choices = [correctWord.en];
-  const others = WORD_BANK.filter(w => w.en !== correctWord.en).sort(() => Math.random() - 0.5);
+
+  if (mode === 'normal') {
+    // 1. 存在しない紛らわしい単語を1つ追加
+    choices.push(generateFakeWord(correctWord.en));
+
+    // 2. スペルが似ている実在単語を検索して追加
+    const similarWords = WORD_BANK.filter(w => 
+      w.en !== correctWord.en && 
+      (isSimilarSpelling(w.en, correctWord.en) || w.en[0] === correctWord.en[0])
+    ).sort(() => Math.random() - 0.5);
+
+    while (choices.length < 4 && similarWords.length > 0) {
+      const picked = similarWords.pop().en;
+      if (!choices.includes(picked)) choices.push(picked);
+    }
+  }
+
+  // 4つに満たない場合はランダムな単語で埋める
+  const others = WORD_BANK.filter(w => w.en !== correctWord.en && !choices.includes(w.en)).sort(() => Math.random() - 0.5);
   while (choices.length < 4) choices.push(others.pop().en);
+
   return choices.sort(() => Math.random() - 0.5).map(val => ({ val, correct: val === correctWord.en }));
+}
+
+function generateFakeWord(str) {
+  if (str.length <= 3 || str.includes(' ')) return str + 's';
+  const vowels = ['a', 'e', 'i', 'o', 'u'];
+  const arr = str.split('');
+  for (let i = 1; i < arr.length - 1; i++) {
+    if (vowels.includes(arr[i])) {
+      const otherVowels = vowels.filter(v => v !== arr[i]);
+      arr[i] = otherVowels[Math.floor(Math.random() * otherVowels.length)];
+      break;
+    }
+  }
+  const fake = arr.join('');
+  return fake === str ? str + 'e' : fake;
+}
+
+function isSimilarSpelling(a, b) {
+  if (Math.abs(a.length - b.length) > 2) return false;
+  let diff = 0;
+  const minLen = Math.min(a.length, b.length);
+  for (let i = 0; i < minLen; i++) {
+    if (a[i] !== b[i]) diff++;
+  }
+  return diff <= 2;
 }
 
 function startTimer() {
@@ -640,22 +684,16 @@ function answer(btn, isCorrect) {
     chal.correct++;
     incrementWordProgress(w.id);
     
-    // ======== 再調整された点数配分ロジック ========
     const elapsed = performance.now() - chal.qStart;
     const remainingRatio = Math.max(0, (CH_TIME_MS - elapsed) / CH_TIME_MS);
     
-    // タイムボーナス係数：1秒残し（残20%）でも80%以上の点数を確保するカーブ
     const timeFactor = 0.75 + (0.25 * remainingRatio);
-
-    // 1問あたりの基礎点（コンボ数に応じて段階的に上昇）
-    // 30問全正解・1秒残し（約80%獲得）の際に合計で200,000pt以上となる調整
-    const basePoint = 2000 + (chal.combo * 1500); // 1問目: 3,500pt 〜 30問目: 47,000pt
+    const basePoint = 2000 + (chal.combo * 1500); 
     
     const modeMultiplier = currentMode === 'normal' ? 1.5 : 1.0;
     const earned = Math.round(basePoint * timeFactor * modeMultiplier);
     
     chal.score += earned;
-    // ==========================================
 
     spawnCarAnimation();
 
@@ -687,7 +725,7 @@ function answer(btn, isCorrect) {
     setTimeout(() => {
       chal.index++;
       if (chal.index < 10) {
-        chal.combo = 0; // コンボリセット
+        chal.combo = 0; 
         renderQuestion();
       } else {
         endGame();
