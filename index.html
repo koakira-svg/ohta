@@ -374,7 +374,6 @@ function playSE(type) {
 function speakJapanese(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    // 「過去形」を「かこけい」に変換して読み上げる
     const speakText = text.replace(/過去形/g, 'かこけい');
     const uttr = new SpeechSynthesisUtterance(speakText);
     uttr.lang = 'ja-JP'; uttr.rate = 1.0;
@@ -639,17 +638,32 @@ function answer(btn, isCorrect) {
     playSE('correct');
     btn.classList.add('correct');
     chal.combo++; chal.correct++;
-    
     incrementWordProgress(w.id);
     
+    // ======== 加速的スコア計算ロジック ========
     const elapsed = performance.now() - chal.qStart;
-    const speedBonus = Math.max(0, Math.floor((CH_TIME_MS - elapsed) / 10)); // 最速で500点
+    // 解答スピードを0〜500に数値化（最速0秒で500）
+    const speedBonus = Math.max(0, Math.floor((CH_TIME_MS - elapsed) / 10)); 
     
-    // スコア計算：30問最速全問正解で Easy: 60万pt / Normal: 100万pt になるよう設定
-    // Easy: (100 + 500) * combo * 43.01075...
-    // Normal: (100 + 500) * combo * 71.68458...
-    const baseUnit = currentMode === 'easy' ? (4000 / 93) : (20000 / 279);
-    chal.score += Math.round((100 + speedBonus) * chal.combo * baseUnit);
+    // 各モードの最大スコア
+    const maxScore = currentMode === 'easy' ? 600000 : 1000000;
+    
+    // コンボ数(c)ごとの理想的な累積ポイント（1^2 + 2^2 + ... + 30^2 = 9455 を基準とする）
+    const getIdealSum = (c) => {
+      if(c <= 0) return 0;
+      let sum = 0;
+      for(let i = 1; i <= c; i++) sum += i * i;
+      return Math.round(maxScore * (sum / 9455));
+    };
+    
+    // 今回のコンボ数で最速解答した場合の基準獲得ポイント（二次関数的に加速増加する）
+    const basePoint = getIdealSum(chal.combo) - getIdealSum(chal.combo - 1);
+    
+    // スピードボーナスを掛け合わせる（スピードボーナス最大時は 600/600 = 1.0倍 になる）
+    const earned = Math.round(basePoint * ((100 + speedBonus) / 600));
+    
+    chal.score += earned;
+    // ==========================================
 
     spawnCarAnimation();
 
@@ -683,7 +697,7 @@ function answer(btn, isCorrect) {
       chal.index++;
       // 10問目以降（サドンデス）で間違えた場合は即終了
       if (chal.index < 10) {
-        chal.combo = 0;
+        chal.combo = 0; // コンボがリセットされると獲得ポイントの伸びも初期化される
         renderQuestion();
       } else {
         endGame();
@@ -799,7 +813,6 @@ function renderResultLbUI(list, currentEntry) {
   let end = Math.min(list.length, start + 3);
   if (end - start < 3) start = Math.max(0, end - 3);
 
-  // 「👈 あなた」を削除し、自分のスコア行はハイライト表示のみにする
   document.getElementById('resultLbList').innerHTML = list.slice(start, end).map((item, idx) => {
     const isMe = (start + idx === myIdx);
     return `
