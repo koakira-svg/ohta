@@ -24,6 +24,11 @@
     --ink-dim:#5c6773;
     --ink-faint:#8894a0;
     --font-display:-apple-system, BlinkMacSystemFont, "Hiragino Sans", "Hiragino Kaku Gothic ProN", sans-serif;
+
+    /* 習熟度別タイルカラー */
+    --tile-unlearned: #2c3e50;
+    --tile-learning: #d35400;
+    --tile-mastered: #27ae60;
   }
   *{box-sizing:border-box; -webkit-tap-highlight-color: transparent;}
   html,body{margin:0;padding:0;}
@@ -36,7 +41,7 @@
     justify-content:center;
     padding:12px 10px 40px;
   }
-  .stage{ position:relative; z-index:1; width:100%; max-width:460px; }
+  .stage{ position:relative; z-index:1; width:100%; max-width:480px; }
   h1,h2,h3{ margin:0; }
   button, input{ font-family:inherit; }
 
@@ -100,22 +105,12 @@
   .choice-btn.correct{ background:var(--ok) !important; color:#08281a !important; }
   .choice-btn.wrong{ background:var(--danger) !important; color:#fff !important; }
 
-  /* カウントダウン表示用スタイル */
   .countdown-num {
-    font-size: 64px;
-    font-weight: 900;
-    color: var(--yellow-dark);
-    line-height: 1;
-    margin: 10px 0;
-    animation: popCount 0.4s ease;
+    font-size: 64px; font-weight: 900; color: var(--yellow-dark); line-height: 1; margin: 10px 0; animation: popCount 0.4s ease;
   }
-  @keyframes popCount {
-    0% { transform: scale(0.5); opacity: 0; }
-    50% { transform: scale(1.2); }
-    100% { transform: scale(1); opacity: 1; }
-  }
+  @keyframes popCount { 0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); } 100% { transform: scale(1); opacity: 1; } }
 
-  /* 工場・コンベアアニメーションエリア */
+  /* コンベアエリア＆車のアニメーション */
   .conveyor-area{
     margin-top:10px; background:#181e26; border-radius:10px; border:2px solid var(--steel-light);
     height:75px; position:relative; overflow:hidden;
@@ -128,12 +123,19 @@
   .conveyor-belt{
     position:absolute; bottom:0; width:100%; height:16px;
     background: repeating-linear-gradient(90deg, #333, #333 10px, #555 10px, #555 20px);
-    animation: moveBelt 1s linear infinite paused;
+    animation: moveBelt 0.5s linear infinite paused;
   }
   .conveyor-belt.running{ animation-play-state: running; }
   @keyframes moveBelt{ from{ background-position:0 0; } to{ background-position:20px 0; } }
-  
-  .car-item{ position:absolute; bottom:14px; left:20px; width:40px; height:24px; transition: left 1.2s linear; }
+
+  /* 車が右へ流れて画面外に消えるクラス */
+  .car-item{
+    position:absolute; bottom:14px; left:20px; width:40px; height:24px;
+    transition: left 1.5s linear;
+  }
+  .car-item.exit-right {
+    left: 110% !important;
+  }
 
   /* LEADERBOARD & DICTIONARY */
   .lb-panel{ background:var(--steel-mid); border:1px solid var(--steel-light); border-radius:10px; padding:10px; text-align:left; }
@@ -144,7 +146,6 @@
   .lb-name{ flex:1; font-weight:bold; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .lb-score{ font-weight:900; color:var(--yellow-dark); }
   .lb-row.my-score .lb-score{ color: #000; }
-
   .toggle-lb-btn{ background:none; border:none; color:var(--yellow); font-size:11px; cursor:pointer; text-decoration:underline; }
 
   .timer-track{ height:6px; border-radius:3px; background:var(--steel-dark); overflow:hidden; margin-bottom:8px; }
@@ -155,14 +156,47 @@
   .btn-primary{ background:var(--yellow); color:#241800; }
   .btn-ghost{ background:var(--steel-mid); color:var(--panel-2); border:1px solid var(--steel-light); }
 
-  /* 単語帳画面 */
-  .dict-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
-  .progress-bar-wrap{ background:var(--steel-dark); border-radius:10px; height:12px; overflow:hidden; margin-bottom:12px; border:1px solid var(--steel-light); }
+  /* 縦20×横5 タイル状単語帳スタイル */
+  .dict-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .progress-bar-wrap{ background:var(--steel-dark); border-radius:10px; height:10px; overflow:hidden; margin-bottom:12px; border:1px solid var(--steel-light); }
   .progress-bar-fill{ background:var(--ok); height:100%; width:0%; transition: width 0.3s; }
-  .dict-list{ max-height:360px; overflow-y:auto; display:flex; flex-direction:column; gap:6px; padding-right:4px; }
-  .dict-item{ background:var(--panel-2); color:var(--ink); padding:8px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; font-size:13px; }
-  .dict-item.cleared{ border-left:5px solid var(--ok); }
-  .clear-tag{ background:var(--ok); color:#fff; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; }
+
+  .dict-legend {
+    display: flex; justify-content: space-around; background: var(--steel-dark);
+    padding: 6px; border-radius: 6px; margin-bottom: 10px; font-size: 10px; font-weight: bold;
+  }
+  .legend-item { display: flex; align-items: center; gap: 4px; }
+  .legend-box { width: 12px; height: 12px; border-radius: 3px; }
+
+  .dict-grid-container { max-height: 440px; overflow-y: auto; padding-right: 2px; }
+  .dict-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  
+  .dict-tile { aspect-ratio: 1 / 1; perspective: 1000px; cursor: pointer; }
+  .dict-tile-inner {
+    position: relative; width: 100%; height: 100%; text-align: center;
+    transition: transform 0.4s ease; transform-style: preserve-3d;
+    border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .dict-tile.flipped .dict-tile-inner { transform: rotateY(180deg); }
+  
+  .tile-front, .tile-back {
+    position: absolute; width: 100%; height: 100%;
+    -webkit-backface-visibility: hidden; backface-visibility: hidden;
+    border-radius: 8px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    padding: 2px; word-break: break-word; overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.15);
+  }
+  .tile-front { color: #fff; }
+  .tile-back { transform: rotateY(180deg); background: var(--panel-2); color: var(--ink); border: 2px solid var(--yellow); }
+
+  .dict-tile.lvl-0 .tile-front { background: var(--tile-unlearned); color: #8894a0; }
+  .dict-tile.lvl-1 .tile-front { background: var(--tile-learning); color: #fff; }
+  .dict-tile.lvl-2 .tile-front { background: var(--tile-mastered); color: #fff; font-weight: bold; }
+
+  .tile-text-en { font-size: 10px; font-weight: 800; line-height: 1.1; }
+  .tile-text-ja { font-size: 9px; font-weight: bold; line-height: 1.1; color: var(--ink); }
+  .tile-num { position: absolute; top: 2px; left: 3px; font-size: 7px; opacity: 0.5; }
 </style>
 </head>
 <body>
@@ -187,7 +221,7 @@
         <button class="start-btn normal" onclick="startGame('normal')">Normal モード ▶</button>
       </div>
 
-      <button class="btn-dict" onclick="openDictionary()">📖 単語帳・学習進捗を見る</button>
+      <button class="btn-dict" onclick="openDictionary()">📖 100単語パネルを見る</button>
 
       <div class="lb-panel">
         <div class="lb-title">
@@ -203,13 +237,27 @@
   <section class="screen" id="screen-dict">
     <div class="lb-panel" style="max-height:none;">
       <div class="dict-header">
-        <h3 style="color:var(--yellow)">📖 単語帳・進捗</h3>
+        <h3 style="color:var(--yellow)">📖 100単語タイル</h3>
         <span id="dictStats" style="font-size:12px; font-weight:bold;">0 / 100 語 (0%)</span>
       </div>
       <div class="progress-bar-wrap">
         <div class="progress-bar-fill" id="dictProgressFill"></div>
       </div>
-      <div class="dict-list" id="dictList"></div>
+
+      <div class="dict-legend">
+        <div class="legend-item"><div class="legend-box" style="background:var(--tile-unlearned)"></div>未学習(0回)</div>
+        <div class="legend-item"><div class="legend-box" style="background:var(--tile-learning)"></div>練習中(1回)</div>
+        <div class="legend-item"><div class="legend-box" style="background:var(--tile-mastered)"></div>習得(2回以上)</div>
+      </div>
+
+      <div style="font-size: 10px; color: var(--yellow); text-align: center; margin-bottom: 6px;">
+        ※タイルをタップすると「英単語 ⇄ 日本語」が切り替わります
+      </div>
+
+      <div class="dict-grid-container">
+        <div class="dict-grid" id="dictGrid"></div>
+      </div>
+
       <button class="btn-ghost" style="width:100%; margin-top:12px;" onclick="showScreen('screen-title')">タイトルに戻る</button>
     </div>
   </section>
@@ -279,7 +327,7 @@ try {
   }
 } catch(e) {}
 
-/* ================= 2. AUDIO SYSTEM ================= */
+/* ================= 2. AUDIO & SPEECH SYSTEM ================= */
 let audioCtx = null;
 function initAudio() {
   if (!audioCtx) {
@@ -299,51 +347,53 @@ function playSE(type) {
     const now = audioCtx.currentTime;
 
     if (type === 'correct') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(523.25, now);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(523.25, now);
       osc.frequency.setValueAtTime(783.99, now + 0.08);
-      gain.gain.setValueAtTime(0.15, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      gain.gain.setValueAtTime(0.15, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.start(now); osc.stop(now + 0.3);
     } else if (type === 'press') {
-      osc.type = 'square';
-      osc.frequency.setValueAtTime(100, now);
+      osc.type = 'square'; osc.frequency.setValueAtTime(100, now);
       osc.frequency.exponentialRampToValueAtTime(30, now + 0.15);
-      gain.gain.setValueAtTime(0.3, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      gain.gain.setValueAtTime(0.3, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       osc.start(now); osc.stop(now + 0.15);
     } else if (type === 'wrong') {
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, now);
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc.type = 'sawtooth'; osc.frequency.setValueAtTime(150, now);
+      gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.start(now); osc.stop(now + 0.3);
     } else if (type === 'count') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, now); // A4
-      gain.gain.setValueAtTime(0.1, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.1, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       osc.start(now); osc.stop(now + 0.15);
     } else if (type === 'start') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, now); // A5
-      gain.gain.setValueAtTime(0.2, now);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+      osc.type = 'sine'; osc.frequency.setValueAtTime(880, now);
+      gain.gain.setValueAtTime(0.2, now); gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
       osc.start(now); osc.stop(now + 0.4);
     }
   } catch(e) {}
 }
 
-function speakWord(text) {
+function speakJapanese(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
     const uttr = new SpeechSynthesisUtterance(text);
-    uttr.lang = 'en-US'; uttr.rate = 0.9;
+    uttr.lang = 'ja-JP'; uttr.rate = 1.0;
     window.speechSynthesis.speak(uttr);
   }
 }
 
-/* ================= 3. WORD BANK & LEARNED TRACKING ================= */
+function speakEnglish(text, onEndCallback) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const uttr = new SpeechSynthesisUtterance(text);
+    uttr.lang = 'en-US'; uttr.rate = 0.9;
+    if (onEndCallback) uttr.onend = onEndCallback;
+    window.speechSynthesis.speak(uttr);
+  } else if (onEndCallback) {
+    onEndCallback();
+  }
+}
+
+/* ================= 3. WORD BANK & PROGRESS TRACKING ================= */
 const RAW_WORDS = [
 ["same","同じ"],["experience","経験、体験"],["actually","実は"],["by the way","ところで"],
 ["holiday","休日"],["arrive","到着する"],["soon","すぐに"],["will","〜でしょう"],
@@ -363,9 +413,7 @@ const RAW_WORDS = [
 ["manufacture","製造業者"],["reflect","〜を反映する"],["climate","気候"],["life","生活"],
 ["lives","life の複数形"],["creativity","創造性"],["chef","シェフ"],["variation","変化"],
 ["create","〜を創造する"],["sauce","ソース"],["traveler","旅行者"],["resident","居住者"],
-["menu","メニュー"],["Singapore","シンガポール"],["went","go の過去形"],["was","is, am の過去形"],
-["were","are の過去形"],["had","have の過去形"],["saw","see の過去形"],["bought","buy の過去形"],["did","do の過去形"],
-["came","come の過去形"],["made","make の過去形"],["took","take の過去形"],
+["menu","メニュー"],["Singapore","シンガポール"],["went","go の過去形"],["was","is, am の過去形"],["were","are の過去形"],["had","have の過去形"],["saw","see の過去形"],["bought","buy の過去形"],["did","do の過去形"],["came","come の過去形"],["made","make の過去形"],["took","take の過去形"],
 ["there is (are)","〜がある"],["world","世界"],["interesting","面白い"],["enjoy","楽しむ"],
 ["different","異なった"],["English","英語"],["leave","出発する"],["family","家族"],
 ["brother","兄弟"],["open","〜を開く"],["breakfast","朝食"],["people","人々"],
@@ -386,24 +434,22 @@ const WORD_BANK = RAW_WORDS.map(([en,ja],i)=>({
   id: i, en, ja: ja.replace(/[（(][^）)]*[）)]/g, '').trim(), level: calcLevel(en, ja)
 }));
 
-function getClearedWords() {
-  return JSON.parse(localStorage.getItem('wf_cleared_words') || '[]');
-}
-function markWordCleared(wordId) {
-  let list = getClearedWords();
-  if (!list.includes(wordId)) {
-    list.push(wordId);
-    localStorage.setItem('wf_cleared_words', JSON.stringify(list));
-  }
+function getWordProgress() {
+  return JSON.parse(localStorage.getItem('wf_word_progress') || '{}');
 }
 
-/* ================= 4. CAR PRODUCTION ANIMATION ================= */
+function incrementWordProgress(wordId) {
+  let progress = getWordProgress();
+  progress[wordId] = (progress[wordId] || 0) + 1;
+  localStorage.setItem('wf_word_progress', JSON.stringify(progress));
+}
+
+/* ================= 4. CAR PRODUCTION & EXIT ANIMATION ================= */
 const CAR_COLORS = ['#e74c3c', '#3498db', '#f1c40f', '#ecf0f1', '#95a5a6'];
 
 function getRandomCarSVG(color) {
   const types = ['sedan', 'wagon', 'truck'];
   const type = types[Math.floor(Math.random() * types.length)];
-  
   if (type === 'truck') {
     return `<svg viewBox="0 0 40 24" width="40" height="24">
       <rect x="2" y="8" width="22" height="10" fill="#bdc3c7"/>
@@ -436,7 +482,6 @@ function spawnCarAnimation() {
 
   setTimeout(() => {
     press.classList.remove('active');
-    
     const color = CAR_COLORS[Math.floor(Math.random() * CAR_COLORS.length)];
     const car = document.createElement('div');
     car.className = 'car-item';
@@ -444,14 +489,19 @@ function spawnCarAnimation() {
     container.appendChild(car);
 
     belt.classList.add('running');
-    setTimeout(() => {
-      car.style.left = (60 + container.children.length * 35) + 'px';
+    
+    // 生成後に右（画面外）へとアニメーション移動させる
+    setTimeout(() => { 
+      car.classList.add('exit-right'); 
     }, 50);
 
-    setTimeout(() => {
-      belt.classList.remove('running');
-    }, 1200);
-
+    // ベルトのアニメーション停止 & 移動し終わった車要素の自動消去
+    setTimeout(() => { 
+      belt.classList.remove('running'); 
+      if (car.parentNode) {
+        car.parentNode.removeChild(car);
+      }
+    }, 1550);
   }, 150);
 }
 
@@ -492,10 +542,7 @@ function startGame(mode) {
   clearCars();
   showScreen('screen-challenge');
 
-  // カウントダウン開始
-  startCountdown(() => {
-    renderQuestion();
-  });
+  startCountdown(() => { renderQuestion(); });
 }
 
 function startCountdown(onComplete) {
@@ -504,8 +551,7 @@ function startCountdown(onComplete) {
   const choicesEl = document.getElementById('chChoices');
 
   tagEl.textContent = 'ライン稼働準備中...';
-  choicesEl.innerHTML = ''; // 選択肢を隠す
-
+  choicesEl.innerHTML = '';
   let count = 3;
   
   function updateCount() {
@@ -517,12 +563,9 @@ function startCountdown(onComplete) {
     } else {
       playSE('start');
       promptEl.innerHTML = `<div class="countdown-num" style="color:var(--ok); font-size:48px;">START!</div>`;
-      setTimeout(() => {
-        onComplete();
-      }, 600);
+      setTimeout(() => { onComplete(); }, 600);
     }
   }
-
   updateCount();
 }
 
@@ -534,7 +577,7 @@ function renderQuestion() {
   document.getElementById('chPrompt').textContent = w.ja;
   document.getElementById('chTag').textContent = `[Lv.${w.level}] この日本語の意味になる英語は？`;
 
-  speakWord(w.en);
+  speakJapanese(w.ja);
 
   const choices = buildChoices(w, currentMode);
   const wrap = document.getElementById('chChoices');
@@ -583,17 +626,35 @@ function answer(btn, isCorrect) {
   const w = chal.words[chal.index];
   document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
 
+  const goToNextQuestion = () => {
+    chal.index++;
+    if (chal.index < chal.words.length) renderQuestion();
+    else endGame();
+    locked = false;
+  };
+
   if (isCorrect && btn) {
     playSE('correct');
     btn.classList.add('correct');
     chal.combo++; chal.correct++;
-    markWordCleared(w.id);
+    
+    incrementWordProgress(w.id);
     
     const elapsed = performance.now() - chal.qStart;
     const speedBonus = Math.max(10, Math.floor((CH_TIME_MS - elapsed) / 10));
     chal.score += Math.round((100 + speedBonus) * chal.combo * 18 * (currentMode === 'easy' ? 0.6 : 1.0));
 
+    // 正解時の車生成＆右へ流す処理を実行
     spawnCarAnimation();
+
+    setTimeout(() => {
+      let isMoved = false;
+      const safeNext = () => {
+        if (!isMoved) { isMoved = true; goToNextQuestion(); }
+      };
+      speakEnglish(w.en, safeNext);
+      setTimeout(safeNext, 1800);
+    }, 400);
 
   } else {
     playSE('wrong');
@@ -602,14 +663,9 @@ function answer(btn, isCorrect) {
       if (b.textContent === w.en) b.classList.add('correct');
     });
     chal.combo = 0;
-  }
 
-  setTimeout(() => {
-    locked = false;
-    chal.index++;
-    if (chal.index < chal.words.length) renderQuestion();
-    else endGame();
-  }, 1000);
+    setTimeout(() => { goToNextQuestion(); }, 1000);
+  }
 }
 
 function endGame() {
@@ -619,25 +675,36 @@ function endGame() {
   showScreen('screen-result');
 }
 
-/* ================= 6. DICTIONARY & RANKING ================= */
+/* ================= 6. DICTIONARY ================= */
 function openDictionary() {
-  const cleared = getClearedWords();
+  const progress = getWordProgress();
   const total = WORD_BANK.length;
-  const pct = Math.round((cleared.length / total) * 100);
+  
+  const learnedCount = Object.keys(progress).filter(id => progress[id] > 0).length;
+  const pct = Math.round((learnedCount / total) * 100);
 
-  document.getElementById('dictStats').textContent = `${cleared.length} / ${total} 語 (${pct}%)`;
+  document.getElementById('dictStats').textContent = `${learnedCount} / ${total} 語 (${pct}%)`;
   document.getElementById('dictProgressFill').style.width = pct + '%';
 
-  const listEl = document.getElementById('dictList');
-  listEl.innerHTML = WORD_BANK.map(w => {
-    const isDone = cleared.includes(w.id);
+  const gridEl = document.getElementById('dictGrid');
+  gridEl.innerHTML = WORD_BANK.map((w, index) => {
+    const count = progress[w.id] || 0;
+    
+    let lvlClass = 'lvl-0';
+    if (count === 1) lvlClass = 'lvl-1';
+    else if (count >= 2) lvlClass = 'lvl-2';
+
     return `
-      <div class="dict-item ${isDone ? 'cleared' : ''}">
-        <div>
-          <strong>${escapeHtml(w.en)}</strong>
-          <span style="font-size:11px; opacity:0.7; margin-left:6px;">${escapeHtml(w.ja)}</span>
+      <div class="dict-tile ${lvlClass}" onclick="toggleTile(this)">
+        <div class="dict-tile-inner">
+          <div class="tile-front">
+            <span class="tile-num">${index + 1}</span>
+            <span class="tile-text-en">${escapeHtml(w.en)}</span>
+          </div>
+          <div class="tile-back">
+            <span class="tile-text-ja">${escapeHtml(w.ja)}</span>
+          </div>
         </div>
-        ${isDone ? '<span class="clear-tag">CLEAR</span>' : '<span style="font-size:10px; opacity:0.4;">未習得</span>'}
       </div>
     `;
   }).join('');
@@ -645,6 +712,11 @@ function openDictionary() {
   showScreen('screen-dict');
 }
 
+function toggleTile(tileEl) {
+  tileEl.classList.toggle('flipped');
+}
+
+/* ================= 7. RANKING ================= */
 function saveScore(name, score, mode) {
   const newEntry = { name, score, mode, timestamp: Date.now() };
   if (db) db.ref('scores').push(newEntry);
