@@ -529,7 +529,6 @@ function startGame(mode) {
   localStorage.setItem('wordfactory_player_name', playerName);
 
   let pool = mode === 'easy' ? WORD_BANK.filter(w => w.level <= 4) : WORD_BANK;
-  // 最大30問の単語を取得
   chal.words = [...pool].sort(() => Math.random() - 0.5).slice(0, 30);
   chal.index = 0; chal.score = 0; chal.combo = 0; chal.correct = 0;
 
@@ -571,7 +570,6 @@ function startCountdown(onComplete) {
 function renderQuestion() {
   const w = chal.words[chal.index];
   
-  // 表示の分母設定（10問以下なら10、サドンデス突入時は現在問題数または30）
   const totalDisplay = chal.index < 10 ? 10 : Math.min(chal.words.length, 30);
   document.getElementById('chQNum').textContent = `${chal.index + 1}/${totalDisplay}`;
   
@@ -637,31 +635,35 @@ function answer(btn, isCorrect) {
   if (isCorrect && btn) {
     playSE('correct');
     btn.classList.add('correct');
-    chal.combo++; chal.correct++;
+    
+    // コンボ数は最大30までに固定
+    chal.combo = Math.min(30, chal.combo + 1); 
+    chal.correct++;
     incrementWordProgress(w.id);
     
-    // ======== 加速的スコア計算ロジック ========
+    // ======== 厳密化された加速的スコア計算ロジック ========
     const elapsed = performance.now() - chal.qStart;
-    // 解答スピードを0〜500に数値化（最速0秒で500）
-    const speedBonus = Math.max(0, Math.floor((CH_TIME_MS - elapsed) / 10)); 
+    // スピード係数：最速0秒で1.0、タイムアップ直前で0.1
+    const timeFactor = Math.max(0.1, (CH_TIME_MS - elapsed) / CH_TIME_MS);
     
-    // 各モードの最大スコア
-    const maxScore = currentMode === 'easy' ? 600000 : 1000000;
+    // 全問最速正解時の満点理論値設定
+    const targetMax = currentMode === 'easy' ? 60000 : 100000;
     
-    // コンボ数(c)ごとの理想的な累積ポイント（1^2 + 2^2 + ... + 30^2 = 9455 を基準とする）
-    const getIdealSum = (c) => {
-      if(c <= 0) return 0;
-      let sum = 0;
-      for(let i = 1; i <= c; i++) sum += i * i;
-      return Math.round(maxScore * (sum / 9455));
-    };
+    // 現在の想定全問題数（通常は30問）
+    const totalQ = Math.min(chal.words.length, 30);
     
-    // 今回のコンボ数で最速解答した場合の基準獲得ポイント（二次関数的に加速増加する）
-    const basePoint = getIdealSum(chal.combo) - getIdealSum(chal.combo - 1);
+    // n問全問正解時の自乗和 sum(i^2 for i=1..n)
+    const sumSq = (n) => (n * (n + 1) * (2 * n + 1)) / 6;
+    const totalSumSq = sumSq(totalQ);
     
-    // スピードボーナスを掛け合わせる（スピードボーナス最大時は 600/600 = 1.0倍 になる）
-    const earned = Math.round(basePoint * ((100 + speedBonus) / 600));
+    // コンボ数（c）に基づく累積の理論ポイント
+    const idealAccumulated = (c) => Math.round(targetMax * (sumSq(c) / totalSumSq));
     
+    // 今回の1問で獲得できる基準点（二次関数カーブ）
+    const basePoint = idealAccumulated(chal.combo) - idealAccumulated(chal.combo - 1);
+    
+    // スピードボーナスを掛け合わせて加算
+    const earned = Math.round(basePoint * timeFactor);
     chal.score += earned;
     // ==========================================
 
@@ -673,7 +675,6 @@ function answer(btn, isCorrect) {
         if (!isMoved) { 
           isMoved = true; 
           chal.index++;
-          // 30問未満かつ連続全問正解中であれば次の問題へ
           if (chal.index < 30 && chal.index < chal.words.length) {
             renderQuestion();
           } else {
@@ -695,9 +696,8 @@ function answer(btn, isCorrect) {
     
     setTimeout(() => {
       chal.index++;
-      // 10問目以降（サドンデス）で間違えた場合は即終了
       if (chal.index < 10) {
-        chal.combo = 0; // コンボがリセットされると獲得ポイントの伸びも初期化される
+        chal.combo = 0; // コンボリセット
         renderQuestion();
       } else {
         endGame();
