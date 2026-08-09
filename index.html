@@ -128,7 +128,6 @@
   .conveyor-belt.running{ animation-play-state: running; }
   @keyframes moveBelt{ from{ background-position:0 0; } to{ background-position:20px 0; } }
 
-  /* 車が右へ流れて画面外に消えるクラス */
   .car-item{
     position:absolute; bottom:14px; left:20px; width:40px; height:24px;
     transition: left 1.5s linear;
@@ -375,7 +374,9 @@ function playSE(type) {
 function speakJapanese(text) {
   if ('speechSynthesis' in window) {
     window.speechSynthesis.cancel();
-    const uttr = new SpeechSynthesisUtterance(text);
+    // 「過去形」を「かこけい」に変換して読み上げる
+    const speakText = text.replace(/過去形/g, 'かこけい');
+    const uttr = new SpeechSynthesisUtterance(speakText);
     uttr.lang = 'ja-JP'; uttr.rate = 1.0;
     window.speechSynthesis.speak(uttr);
   }
@@ -490,12 +491,10 @@ function spawnCarAnimation() {
 
     belt.classList.add('running');
     
-    // 生成後に右（画面外）へとアニメーション移動させる
     setTimeout(() => { 
       car.classList.add('exit-right'); 
     }, 50);
 
-    // ベルトのアニメーション停止 & 移動し終わった車要素の自動消去
     setTimeout(() => { 
       belt.classList.remove('running'); 
       if (car.parentNode) {
@@ -531,7 +530,8 @@ function startGame(mode) {
   localStorage.setItem('wordfactory_player_name', playerName);
 
   let pool = mode === 'easy' ? WORD_BANK.filter(w => w.level <= 4) : WORD_BANK;
-  chal.words = [...pool].sort(() => Math.random() - 0.5).slice(0, 10);
+  // 最大30問の単語を取得
+  chal.words = [...pool].sort(() => Math.random() - 0.5).slice(0, 30);
   chal.index = 0; chal.score = 0; chal.combo = 0; chal.correct = 0;
 
   document.getElementById('chModeBadge').textContent = mode === 'easy' ? 'EASY' : 'NORMAL';
@@ -571,11 +571,20 @@ function startCountdown(onComplete) {
 
 function renderQuestion() {
   const w = chal.words[chal.index];
-  document.getElementById('chQNum').textContent = `${chal.index + 1}/10`;
-  document.getElementById('chScore').textContent = Math.min(chal.score, currentMode==='easy'?600000:1000000).toLocaleString('ja-JP');
+  
+  // 表示の分母設定（10問以下なら10、サドンデス突入時は現在問題数または30）
+  const totalDisplay = chal.index < 10 ? 10 : Math.min(chal.words.length, 30);
+  document.getElementById('chQNum').textContent = `${chal.index + 1}/${totalDisplay}`;
+  
+  document.getElementById('chScore').textContent = chal.score.toLocaleString('ja-JP');
   document.getElementById('chCombo').textContent = chal.combo;
   document.getElementById('chPrompt').textContent = w.ja;
-  document.getElementById('chTag').textContent = `[Lv.${w.level}] この日本語の意味になる英語は？`;
+  
+  if (chal.index >= 10) {
+    document.getElementById('chTag').textContent = `🔥 サドンデスモード！ミスで即終了 [Lv.${w.level}]`;
+  } else {
+    document.getElementById('chTag').textContent = `[Lv.${w.level}] この日本語の意味になる英語は？`;
+  }
 
   speakJapanese(w.ja);
 
@@ -626,13 +635,6 @@ function answer(btn, isCorrect) {
   const w = chal.words[chal.index];
   document.querySelectorAll('.choice-btn').forEach(b => b.disabled = true);
 
-  const goToNextQuestion = () => {
-    chal.index++;
-    if (chal.index < chal.words.length) renderQuestion();
-    else endGame();
-    locked = false;
-  };
-
   if (isCorrect && btn) {
     playSE('correct');
     btn.classList.add('correct');
@@ -641,16 +643,30 @@ function answer(btn, isCorrect) {
     incrementWordProgress(w.id);
     
     const elapsed = performance.now() - chal.qStart;
-    const speedBonus = Math.max(10, Math.floor((CH_TIME_MS - elapsed) / 10));
-    chal.score += Math.round((100 + speedBonus) * chal.combo * 18 * (currentMode === 'easy' ? 0.6 : 1.0));
+    const speedBonus = Math.max(0, Math.floor((CH_TIME_MS - elapsed) / 10)); // 最速で500点
+    
+    // スコア計算：30問最速全問正解で Easy: 60万pt / Normal: 100万pt になるよう設定
+    // Easy: (100 + 500) * combo * 43.01075...
+    // Normal: (100 + 500) * combo * 71.68458...
+    const baseUnit = currentMode === 'easy' ? (4000 / 93) : (20000 / 279);
+    chal.score += Math.round((100 + speedBonus) * chal.combo * baseUnit);
 
-    // 正解時の車生成＆右へ流す処理を実行
     spawnCarAnimation();
 
     setTimeout(() => {
       let isMoved = false;
       const safeNext = () => {
-        if (!isMoved) { isMoved = true; goToNextQuestion(); }
+        if (!isMoved) { 
+          isMoved = true; 
+          chal.index++;
+          // 30問未満かつ連続全問正解中であれば次の問題へ
+          if (chal.index < 30 && chal.index < chal.words.length) {
+            renderQuestion();
+          } else {
+            endGame();
+          }
+          locked = false;
+        }
       };
       speakEnglish(w.en, safeNext);
       setTimeout(safeNext, 1800);
@@ -662,14 +678,23 @@ function answer(btn, isCorrect) {
     document.querySelectorAll('.choice-btn').forEach(b => {
       if (b.textContent === w.en) b.classList.add('correct');
     });
-    chal.combo = 0;
-
-    setTimeout(() => { goToNextQuestion(); }, 1000);
+    
+    setTimeout(() => {
+      chal.index++;
+      // 10問目以降（サドンデス）で間違えた場合は即終了
+      if (chal.index < 10) {
+        chal.combo = 0;
+        renderQuestion();
+      } else {
+        endGame();
+      }
+      locked = false;
+    }, 1000);
   }
 }
 
 function endGame() {
-  document.getElementById('resultSub').textContent = `[${currentMode.toUpperCase()}] 10問中 ${chal.correct}問 正解`;
+  document.getElementById('resultSub').textContent = `${chal.index}問中 ${chal.correct}問 正解`;
   document.getElementById('finalScore').textContent = `${chal.score.toLocaleString('ja-JP')} pt`;
   saveScore(playerName, chal.score, currentMode);
   showScreen('screen-result');
@@ -774,12 +799,13 @@ function renderResultLbUI(list, currentEntry) {
   let end = Math.min(list.length, start + 3);
   if (end - start < 3) start = Math.max(0, end - 3);
 
+  // 「👈 あなた」を削除し、自分のスコア行はハイライト表示のみにする
   document.getElementById('resultLbList').innerHTML = list.slice(start, end).map((item, idx) => {
     const isMe = (start + idx === myIdx);
     return `
       <div class="lb-row ${isMe ? 'my-score' : ''}">
         <span class="lb-rank">${start + idx + 1}位</span>
-        <span class="lb-name">${escapeHtml(item.name)} ${isMe ? '👈 あなた' : ''}</span>
+        <span class="lb-name">${escapeHtml(item.name)}</span>
         <span class="lb-score">${item.score.toLocaleString('ja-JP')} pt</span>
       </div>
     `;
