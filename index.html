@@ -636,34 +636,24 @@ function answer(btn, isCorrect) {
     playSE('correct');
     btn.classList.add('correct');
     
-    // コンボ数は最大30までに固定
     chal.combo = Math.min(30, chal.combo + 1); 
     chal.correct++;
     incrementWordProgress(w.id);
     
-    // ======== 厳密化された加速的スコア計算ロジック ========
+    // ======== 再調整された点数配分ロジック ========
     const elapsed = performance.now() - chal.qStart;
-    // スピード係数：最速0秒で1.0、タイムアップ直前で0.1
-    const timeFactor = Math.max(0.1, (CH_TIME_MS - elapsed) / CH_TIME_MS);
+    const remainingRatio = Math.max(0, (CH_TIME_MS - elapsed) / CH_TIME_MS);
     
-    // 全問最速正解時の満点理論値設定
-    const targetMax = currentMode === 'easy' ? 60000 : 100000;
+    // タイムボーナス係数：1秒残し（残20%）でも80%以上の点数を確保するカーブ
+    const timeFactor = 0.75 + (0.25 * remainingRatio);
+
+    // 1問あたりの基礎点（コンボ数に応じて段階的に上昇）
+    // 30問全正解・1秒残し（約80%獲得）の際に合計で200,000pt以上となる調整
+    const basePoint = 2000 + (chal.combo * 1500); // 1問目: 3,500pt 〜 30問目: 47,000pt
     
-    // 現在の想定全問題数（通常は30問）
-    const totalQ = Math.min(chal.words.length, 30);
+    const modeMultiplier = currentMode === 'normal' ? 1.5 : 1.0;
+    const earned = Math.round(basePoint * timeFactor * modeMultiplier);
     
-    // n問全問正解時の自乗和 sum(i^2 for i=1..n)
-    const sumSq = (n) => (n * (n + 1) * (2 * n + 1)) / 6;
-    const totalSumSq = sumSq(totalQ);
-    
-    // コンボ数（c）に基づく累積の理論ポイント
-    const idealAccumulated = (c) => Math.round(targetMax * (sumSq(c) / totalSumSq));
-    
-    // 今回の1問で獲得できる基準点（二次関数カーブ）
-    const basePoint = idealAccumulated(chal.combo) - idealAccumulated(chal.combo - 1);
-    
-    // スピードボーナスを掛け合わせて加算
-    const earned = Math.round(basePoint * timeFactor);
     chal.score += earned;
     // ==========================================
 
