@@ -202,16 +202,17 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 /* =================================================================
-   1. FIREBASE CONFIG & INITIALIZATION
+   1. FIREBASE CONFIG & INITIALIZATION (新プロジェクト e-go-ce300)
 ================================================================= */
 const firebaseConfig = {
-  apiKey: "AIzaSyCRWTxhEN-v4Tvvgbv0J6XmhqglIVLkXoU",
-  authDomain: "e-go-3cd93.firebaseapp.com",
-  projectId: "e-go-3cd93",
-  storageBucket: "e-go-3cd93.firebasestorage.app",
-  messagingSenderId: "1028542275263",
-  appId: "1:1028542275263:web:3e02c15a43c971a28db00a",
-  measurementId: "G-E9WT8H41WQ"
+  apiKey: "AIzaSyDU3AjEG_M62lXdp22BEe-qWDL4vBE4kag",
+  authDomain: "e-go-ce300.firebaseapp.com",
+  databaseURL: "https://e-go-ce300-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "e-go-ce300",
+  storageBucket: "e-go-ce300.firebasestorage.app",
+  messagingSenderId: "1020777269166",
+  appId: "1:1020777269166:web:2b06237b17a4652ef9aa3f",
+  measurementId: "G-FN3VFMNEG2"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -678,18 +679,35 @@ async function promptGiftItem(targetName){
 ================================================================= */
 document.getElementById('btn-do-reg').onclick = async () => {
   const nameInput = document.getElementById('reg-name-input').value.trim();
-  if(!nameInput){ alert('名前を入力してください。'); return; }
-
-  const cleanName = nameInput.replace(/[\/\s]/g, '_');
-  const ref = doc(db, "users", cleanName);
-  const snap = await getDoc(ref);
-  if(snap.exists()){
-    alert('その名前は既に使用されています。別の名前を入力してください。');
-    return;
+  if(!nameInput){ 
+    alert('名前を入力してください。'); 
+    return; 
   }
 
-  await loadUserData(cleanName);
-  showScreen('start');
+  const cleanName = nameInput.replace(/[\/\s]/g, '_');
+  const btn = document.getElementById('btn-do-reg');
+  btn.disabled = true;
+  btn.textContent = '登録中...';
+
+  try {
+    const ref = doc(db, "users", cleanName);
+    const snap = await getDoc(ref);
+    if(snap.exists()){
+      alert('その名前は既に使用されています。別の名前を入力してください。');
+      btn.disabled = false;
+      btn.textContent = '登録して工場へ';
+      return;
+    }
+
+    await loadUserData(cleanName);
+    showScreen('start');
+  } catch(e) {
+    console.error("登録エラー:", e);
+    alert('登録処理に失敗しました:\n' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = '登録して工場へ';
+  }
 };
 
 document.getElementById('btn-start-game').onclick = startQuizGame;
@@ -704,7 +722,12 @@ document.getElementById('btn-rank-back').onclick = () => showScreen('start');
 // 自動ログインチェック
 const savedName = localStorage.getItem('wf_username');
 if(savedName){
-  loadUserData(savedName).then(() => showScreen('start'));
+  loadUserData(savedName)
+    .then(() => showScreen('start'))
+    .catch((e) => {
+      console.error("ログインエラー:", e);
+      showScreen('reg');
+    });
 } else {
   showScreen('reg');
 }
