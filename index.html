@@ -2,17 +2,16 @@
 <html lang="ja">
 <head>
   <meta charset="UTF-8">
-  <!-- スマホでの拡大・ピンチイン/アウトを無効化 -->
+  <!-- スマホでの誤操作・ズーム防止 -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>ガチャ＆コレクション</title>
+  <title>英単語クイズ＆コレクション</title>
   <style>
-    /* 画面全体でスワイプや余計な動作を無効化 */
     * {
       box-sizing: border-box;
-      user-select: none; /* テキスト選択を無効化 */
+      user-select: none;
       -webkit-user-select: none;
-      -webkit-touch-callout: none; /* 長押しメニューを無効化 */
-      touch-action: manipulation; /* ダブルタップズームなどを防止 */
+      -webkit-touch-callout: none;
+      touch-action: manipulation;
     }
 
     html, body {
@@ -20,7 +19,7 @@
       padding: 0;
       width: 100%;
       height: 100%;
-      overflow: hidden; /* スクリーン全体のスクロールを禁止 */
+      overflow: hidden;
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
       background-color: #f4f6f8;
       display: flex;
@@ -36,9 +35,21 @@
       font-size: 1.1rem;
       font-weight: bold;
       flex-shrink: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 16px;
     }
 
-    /* メインコンテンツ表示エリア */
+    .user-money {
+      font-size: 0.9rem;
+      background: #444;
+      padding: 4px 10px;
+      border-radius: 12px;
+      color: #ffd700;
+    }
+
+    /* メインエリア */
     main {
       flex: 1;
       display: flex;
@@ -46,53 +57,140 @@
       align-items: center;
       justify-content: center;
       padding: 16px;
-      overflow-y: auto; /* コレクション一覧のみスクロール可能 */
+      overflow-y: auto;
     }
 
-    /* ガチャ画面エリア */
-    .gacha-box {
-      text-align: center;
+    /* 共通カードスタイル */
+    .card-box {
       background: #fff;
-      padding: 24px;
+      padding: 20px;
       border-radius: 16px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 320px;
+      max-width: 340px;
+      text-align: center;
     }
 
+    /* クイズ画面 */
+    .quiz-word {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #333;
+      margin: 15px 0;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 15px;
+    }
+
+    .btn-option {
+      background: #f0f0f0;
+      border: 1px solid #ccc;
+      padding: 12px 8px;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .btn-option:active {
+      background: #ddd;
+    }
+
+    /* リザルト表示 */
+    .result-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      color: #ff5722;
+      margin-bottom: 10px;
+    }
+
+    .reward-box {
+      background: #fff8e1;
+      border: 1px solid #ffe082;
+      padding: 12px;
+      border-radius: 8px;
+      margin: 15px 0;
+      font-weight: bold;
+      color: #f57f17;
+      font-size: 1.1rem;
+    }
+
+    .btn-action {
+      background: #ff5722;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 20px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+
+    /* ガチャ画面 */
     .gacha-display {
-      width: 120px;
-      height: 120px;
+      width: 100px;
+      height: 100px;
       margin: 0 auto 16px;
       background: #e0e0e0;
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.5rem;
+      font-size: 2.2rem;
     }
 
-    .btn-draw {
-      background: #ff5722;
-      color: #fff;
-      border: none;
-      padding: 14px 28px;
-      font-size: 1.1rem;
+    /* 単語図鑑・コレクション共通リスト */
+    .grid-container {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      width: 100%;
+      max-width: 360px;
+    }
+
+    .dict-card {
+      background: #fff;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: left;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+
+    .dict-word {
       font-weight: bold;
-      border-radius: 24px;
-      cursor: pointer;
-      box-shadow: 0 4px 8px rgba(255,87,34,0.3);
+      font-size: 1.1rem;
+      color: #333;
     }
 
-    .btn-draw:active {
-      transform: scale(0.96);
+    .dict-meaning {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 6px;
     }
 
-    /* コレクション画面エリア */
+    /* 4段階習熟度バッジ */
+    .level-badge {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: bold;
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+    .lvl-0 { background: #e0e0e0; color: #666; } /* 未学習 */
+    .lvl-1 { background: #ffe0b2; color: #e65100; } /* あいまい */
+    .lvl-2 { background: #bbdefb; color: #0d47a1; } /* もう少し */
+    .lvl-3 { background: #c8e6c9; color: #1b5e20; } /* 完璧！ */
+
+    /* コレクション画面 */
     .collection-grid {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
+      gap: 10px;
       width: 100%;
       max-width: 360px;
     }
@@ -106,11 +204,10 @@
     }
 
     .item-number {
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: #888;
       font-weight: bold;
       display: block;
-      margin-bottom: 4px;
     }
 
     .item-icon {
@@ -118,11 +215,10 @@
     }
 
     .item-name {
-      font-size: 0.8rem;
-      margin-top: 4px;
+      font-size: 0.75rem;
     }
 
-    /* ボトムナビゲーション（1行に収まる設計） */
+    /* ナビゲーションバー */
     nav {
       display: flex;
       background: #fff;
@@ -135,10 +231,10 @@
       flex: 1;
       border: none;
       background: none;
-      font-size: 0.95rem;
+      font-size: 0.85rem;
       font-weight: bold;
       color: #666;
-      white-space: nowrap; /* 2行化を防止 */
+      white-space: nowrap;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -152,30 +248,69 @@
 </head>
 <body>
 
-  <header id="header-title">ガチャをひく</header>
+  <header>
+    <span id="header-title">クイズ</span>
+    <span class="user-money">💰 <span id="money-display">0</span>円</span>
+  </header>
 
   <main>
-    <!-- ガチャ画面 -->
-    <div id="view-gacha" class="gacha-box">
-      <div class="gacha-display" id="gacha-result">❓</div>
-      <button class="btn-draw" onclick="drawGacha()">1回まわす</button>
+    <!-- 1. クイズ画面 -->
+    <div id="view-quiz" class="card-box">
+      <div id="quiz-content">
+        <div style="font-size:0.85rem; color:#888;" id="quiz-progress">第 1 問 / 3問</div>
+        <div class="quiz-word" id="quiz-word">apple</div>
+        <div class="options-grid" id="options-container">
+          <!-- 選択肢を動的生成 -->
+        </div>
+      </div>
+
+      <!-- クイズ終了時のリザルト画面 -->
+      <div id="quiz-result" style="display: none;">
+        <div class="result-title">ゲーム終了！</div>
+        <p id="result-score">3問中 3問 正解！</p>
+        <div class="reward-box">
+          獲得金額: +<span id="earned-money">0</span>円
+        </div>
+        <button class="btn-action" onclick="startQuiz()">もう一度挑戦</button>
+      </div>
     </div>
 
-    <!-- コレクション画面 (初期は非表示) -->
+    <!-- 2. ガチャ画面 -->
+    <div id="view-gacha" class="card-box" style="display: none;">
+      <div class="gacha-display" id="gacha-result">❓</div>
+      <button class="btn-action" onclick="drawGacha()">ガチャをひく (200円)</button>
+    </div>
+
+    <!-- 3. 単語図鑑画面 -->
+    <div id="view-dictionary" class="grid-container" style="display: none;">
+      <!-- 動的生成 -->
+    </div>
+
+    <!-- 4. コレクション画面 -->
     <div id="view-collection" class="collection-grid" style="display: none;">
-      <!-- JavaScriptで番号付きアイテムを動的生成 -->
+      <!-- 動的生成 -->
     </div>
   </main>
 
-  <!-- 下部ナビゲーションバー -->
+  <!-- 下部ナビゲーション -->
   <nav>
-    <button class="nav-btn active" id="btn-nav-gacha" onclick="switchTab('gacha')">ガチャをひく</button>
-    <button class="nav-btn" id="btn-nav-collection" onclick="switchTab('collection')">コレクション</button>
+    <button class="nav-btn active" id="btn-quiz" onclick="switchTab('quiz')">クイズ</button>
+    <button class="nav-btn" id="btn-gacha" onclick="switchTab('gacha')">ガチャをひく</button>
+    <button class="nav-btn" id="btn-dictionary" onclick="switchTab('dictionary')">単語図鑑</button>
+    <button class="nav-btn" id="btn-collection" onclick="switchTab('collection')">コレクション</button>
   </nav>
 
   <script>
-    // コレクションデータ
-    const items = [
+    // 単語データ（正解回数を保持して4段階習熟度に変換）
+    const wordList = [
+      { id: 1, word: "apple", meaning: "りんご", correctCount: 0 },
+      { id: 2, word: "dog", meaning: "いぬ", correctCount: 0 },
+      { id: 3, word: "book", meaning: "ほん", correctCount: 0 },
+      { id: 4, word: "cat", meaning: "ねこ", correctCount: 0 }
+    ];
+
+    // コレクション用アイテム
+    const collectionItems = [
       { id: 1, name: "ライオン", icon: "🦁" },
       { id: 2, name: "パンダ", icon: "🐼" },
       { id: 3, name: "コアラ", icon: "🐨" },
@@ -184,45 +319,156 @@
       { id: 6, name: "キツネ", icon: "🦊" }
     ];
 
+    let userMoney = 0;
+    let currentQuizIndex = 0;
+    let score = 0;
+    let currentQuizSet = [];
+
+    // 習熟度テキスト＆クラス定義
+    function getMasteryInfo(count) {
+      if (count === 0) return { text: "未学習", class: "lvl-0" };
+      if (count === 1) return { text: "あいまい", class: "lvl-1" };
+      if (count === 2) return { text: "もう少し", class: "lvl-2" };
+      return { text: "完璧！", class: "lvl-3" }; // 3回以上
+    }
+
     // タブ切り替え
     function switchTab(tab) {
-      const gachaView = document.getElementById('view-gacha');
-      const collectionView = document.getElementById('view-collection');
-      const btnGacha = document.getElementById('btn-nav-gacha');
-      const btnCollection = document.getElementById('btn-nav-collection');
-      const headerTitle = document.getElementById('header-title');
+      const views = {
+        quiz: document.getElementById('view-quiz'),
+        gacha: document.getElementById('view-gacha'),
+        dictionary: document.getElementById('view-dictionary'),
+        collection: document.getElementById('view-collection')
+      };
+      
+      const buttons = {
+        quiz: document.getElementById('btn-quiz'),
+        gacha: document.getElementById('btn-gacha'),
+        dictionary: document.getElementById('btn-dictionary'),
+        collection: document.getElementById('btn-collection')
+      };
 
-      if (tab === 'gacha') {
-        gachaView.style.display = 'block';
-        collectionView.style.display = 'none';
-        btnGacha.classList.add('active');
-        btnCollection.classList.remove('active');
-        headerTitle.innerText = 'ガチャをひく';
+      const titleMap = {
+        quiz: 'クイズ',
+        gacha: 'ガチャをひく',
+        dictionary: '単語図鑑',
+        collection: 'コレクション'
+      };
+
+      Object.keys(views).forEach(key => {
+        views[key].style.display = (key === tab) ? (key === 'dictionary' || key === 'collection' ? 'grid' : 'block') : 'none';
+        buttons[key].classList.toggle('active', key === tab);
+      });
+
+      document.getElementById('header-title').innerText = titleMap[tab];
+
+      if (tab === 'dictionary') renderDictionary();
+      if (tab === 'collection') renderCollection();
+      if (tab === 'quiz' && currentQuizIndex === 0 && score === 0) startQuiz();
+    }
+
+    // クイズ開始
+    function startQuiz() {
+      currentQuizIndex = 0;
+      score = 0;
+      currentQuizSet = [...wordList].sort(() => 0.5 - Math.random()).slice(0, 3);
+      document.getElementById('quiz-content').style.display = 'block';
+      document.getElementById('quiz-result').style.display = 'none';
+      showQuestion();
+    }
+
+    // 問題表示
+    function showQuestion() {
+      const q = currentQuizSet[currentQuizIndex];
+      document.getElementById('quiz-progress').innerText = `第 ${currentQuizIndex + 1} 問 / ${currentQuizSet.length}問`;
+      document.getElementById('quiz-word').innerText = q.word;
+
+      // ダミー選択肢作成
+      const choices = [q.meaning];
+      while (choices.length < 4) {
+        const randomMeaning = wordList[Math.floor(Math.random() * wordList.length)].meaning;
+        if (!choices.includes(randomMeaning)) choices.push(randomMeaning);
+      }
+      choices.sort(() => 0.5 - Math.random());
+
+      const container = document.getElementById('options-container');
+      container.innerHTML = '';
+      choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = 'btn-option';
+        btn.innerText = choice;
+        btn.onclick = () => answerQuestion(choice === q.meaning, q);
+        container.appendChild(btn);
+      });
+    }
+
+    // 回答処理
+    function answerQuestion(isCorrect, wordItem) {
+      if (isCorrect) {
+        score++;
+        // 正解時に習熟度カウントアップ
+        wordItem.correctCount++;
+      }
+
+      currentQuizIndex++;
+      if (currentQuizIndex < currentQuizSet.length) {
+        showQuestion();
       } else {
-        gachaView.style.display = 'none';
-        collectionView.style.display = 'grid';
-        btnGacha.classList.remove('active');
-        btnCollection.classList.add('active');
-        headerTitle.innerText = 'コレクション';
-        renderCollection();
+        finishQuiz();
       }
     }
 
-    // ガチャを引く動作
+    // クイズ終了（リザルト＆獲得金額の計算）
+    function finishQuiz() {
+      document.getElementById('quiz-content').style.display = 'none';
+      document.getElementById('quiz-result').style.display = 'block';
+
+      const earnedMoney = score * 100; // 1正解につき100円
+      userMoney += earnedMoney;
+      
+      document.getElementById('money-display').innerText = userMoney;
+      document.getElementById('result-score').innerText = `${currentQuizSet.length}問中 ${score}問 正解！`;
+      document.getElementById('earned-money').innerText = earnedMoney;
+    }
+
+    // ガチャ実行
     function drawGacha() {
-      const randomItem = items[Math.floor(Math.random() * items.length)];
+      if (userMoney < 200) {
+        alert('お金が足りません！クイズを解いて稼ぎましょう。');
+        return;
+      }
+      userMoney -= 200;
+      document.getElementById('money-display').innerText = userMoney;
+
+      const randomItem = collectionItems[Math.floor(Math.random() * collectionItems.length)];
       document.getElementById('gacha-result').innerText = randomItem.icon;
     }
 
-    // コレクション一覧を描画（No.001の3桁表記に変更）
+    // 単語図鑑描画（習熟度4段階）
+    function renderDictionary() {
+      const container = document.getElementById('view-dictionary');
+      container.innerHTML = '';
+
+      wordList.forEach(item => {
+        const info = getMasteryInfo(item.correctCount);
+        const card = document.createElement('div');
+        card.className = 'dict-card';
+        card.innerHTML = `
+          <div class="dict-word">${item.word}</div>
+          <div class="dict-meaning">${item.meaning}</div>
+          <span class="level-badge ${info.class}">${info.text}</span>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    // コレクション描画（3桁番号）
     function renderCollection() {
       const container = document.getElementById('view-collection');
       container.innerHTML = '';
 
-      items.forEach(item => {
-        // IDを3桁の番号（No.001, No.002...）に整形
+      collectionItems.forEach(item => {
         const numStr = "No." + String(item.id).padStart(3, '0');
-
         const card = document.createElement('div');
         card.className = 'item-card';
         card.innerHTML = `
@@ -233,6 +479,9 @@
         container.appendChild(card);
       });
     }
+
+    // 初期起動
+    startQuiz();
   </script>
 </body>
 </html>
