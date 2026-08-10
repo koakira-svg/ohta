@@ -28,6 +28,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   font-family:var(--font-d); color:#1c1c1c; background:linear-gradient(180deg, var(--yellow), var(--yellow-dark));
   padding:12px 24px; border-radius:10px; font-size:15px; letter-spacing:1px;
   box-shadow:0 4px 0 #8a6a00, 0 6px 12px rgba(0,0,0,0.4); border:2px solid #2a2010; transition:transform .08s ease;
+  width: 100%;
 }
 .btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a6a00;}
 .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
@@ -47,15 +48,15 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .gauge-label{font-family:var(--font-m);font-size:9px;color:#8b909c;}
 .gauge-value{font-family:var(--font-d);font-size:16px;color:var(--yellow);}
 
-.order-slip{margin:10px 0 6px;background:var(--paper);border-radius:8px;padding:12px 20px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;}
-.order-jp{font-size:26px;font-weight:900;color:#2a2010;}
+.order-slip{margin:10px 0 6px;background:var(--paper);border-radius:8px;padding:12px 20px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;}
+.order-jp{font-size:24px;font-weight:900;color:#2a2010;}
 .order-stats{font-size:10px;color:#7a6b52;margin-top:2px;}
 
 .slots{display:flex;justify-content:center;align-items:center;gap:4px;padding:8px 0;min-height:64px;width:100%;flex-wrap:wrap;}
 .slot{width:36px;height:46px;border:2px dashed #565d6b;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:22px;color:var(--paper);background:rgba(0,0,0,0.2);}
 .slot.filled{border-style:solid;border-color:var(--green);background:#2a3530;}
 
-.belt-wrap{position:relative;width:100%;max-width:440px;flex:1;margin-top:8px;border-radius:12px;overflow:hidden;border:3px solid #464c58;background:#1a1c21;min-height:160px;}
+.belt-wrap{position:relative;width:100%;max-width:440px;flex:1;margin-top:8px;border-radius:12px;overflow:hidden;border:3px solid #464c58;background:#1a1c21;min-height:180px;}
 .belt-track{position:absolute;inset:0;background:repeating-linear-gradient(115deg, #34383f 0 20px, #131417 20px 40px);background-size:200% 100%;animation:beltmove 1.5s linear infinite;}
 @keyframes beltmove{from{background-position:0 0;}to{background-position:-56.5px 0;}}
 
@@ -70,7 +71,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 
 /* Collection & Lists */
 .tab-row{display:flex;gap:6px;margin-bottom:10px;}
-.tab-btn{flex:1;padding:8px;background:#3a3f4a;color:#aaa;border-radius:6px;font-size:11px;text-align:center;}
+.tab-btn{flex:1;padding:8px;background:#3a3f4a;color:#aaa;border-radius:6px;font-size:11px;text-align:center;border:none;cursor:pointer;}
 .tab-btn.active{background:var(--yellow);color:#1c1c1c;font-weight:700;}
 
 .grid-container{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;padding:4px;}
@@ -102,7 +103,6 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <div class="screen" id="screen-reg">
     <div class="panel-card" style="text-align:center;">
       <div class="panel-title">🏭 工員登録（初回のみ）</div>
-      <div style="font-size:12px;color:#ccc;">重複できない一意のプレイヤー名を登録してください。</div>
       <input type="text" id="reg-name-input" placeholder="名前を入力 (10文字以内)" maxlength="10">
       <button class="btn" id="btn-do-reg">登録して工場へ</button>
     </div>
@@ -151,8 +151,8 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
     <div class="panel-card">
       <div class="panel-title">📖 コレクションノート</div>
       <div class="tab-row">
-        <button class="tab-btn active" id="tab-btn-items">アイテム・称号 (54)</button>
-        <button class="tab-btn" id="tab-btn-words">単語図鑑 (100)</button>
+        <button class="tab-btn active" id="tab-btn-items">アイテム・称号</button>
+        <button class="tab-btn" id="tab-btn-words">単語図鑑</button>
       </div>
       <div class="grid-container" id="col-grid"></div>
       <button class="btn secondary" style="margin-top:10px;" id="btn-col-back">もどる</button>
@@ -218,27 +218,18 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* =================================================================
-   2. MASTER DATA (100 Words [7 Level Split] & 54 Items)
+   2. MASTER DATA (100 Words & 54 Items)
 ================================================================= */
-// [word, jp, level(1-7)]
 const WORD_BANK = [
-  // Lv1 (簡単/短文)
   ["cat","猫",1],["dog","犬",1],["egg","卵",1],["book","本",1],["door","ドア",1],["apple","りんご",1],["house","家",1],["water","水",1],["sky","空",1],["paper","紙",1],["river","川",1],["city","都市",1],["time","時間",1],["year","年",1],
-  // Lv2
   ["friend","友達",2],["music","音楽",2],["school","学校",2],["window","窓",2],["country","国",2],["earth","地球",2],["future","未来",2],["history","歴史",2],["nature","自然",2],["space","宇宙",2],["story","物語",2],["same","同じ",2],["soon","すぐに",2],["tall","背が高い",2],
-  // Lv3
   ["arrive","到着する",3],["will","～でしょう",3],["excited","ワクワクした",3],["find","見つける",3],["area","地域",3],["speech","スピーチ",3],["if","もし～なら",3],["forget","忘れる",3],["thick","分厚い",3],["early","早い",3],["change","変化する",3],["flight","飛行便",3],["airport","空港",3],["meter","メートル",3],
-  // Lv4
   ["experience","経験",4],["actually","実は",4],["holiday","休日",4],["language","言語",4],["culture","文化",4],["foreign","外国の",4],["seafood","海鮮",4],["weigh","重さがある",4],["ton","トン",4],["dollar","ドル",4],["painting","絵画",4],["wall","壁",4],["surprised","驚いた",4],["order","注文する",4],
-  // Lv5
   ["reservation","予約",5],["communicate","意思疎通する",5],["especially","特に",5],["topping","トッピング",5],["flavor","味",5],["salt","塩",5],["add","加える",5],["butter","バター",5],["climate","気候",5],["life","生活",5],["creativity","創造性",5],["chef","シェフ",5],["create","創造する",5],["sauce","ソース",5],
-  // Lv6
   ["traveler","旅行者",6],["resident","住民",6],["menu","メニュー",6],["world","世界",6],["interesting","面白い",6],["enjoy","楽しむ",6],["different","異なる",6],["English","英語",6],["leave","出発する",6],["family","家族",6],["brother","兄弟",6],["open","開く",6],["breakfast","朝食",6],["people","人々",6],
-  // Lv7 (長熟語・応用)
   ["know","知っている",7],["by the way","ところで",7],["for example","例えば",7],["and so on","～など",7],["be interested in","興味がある",7],["come from","出身である",7],["here is","ここに～がある",7],["see you","またね",7],["there is","～が存在する",7],["get up","起きる",7],["a lot of","たくさんの",7],["take care of","世話をする",7],["listen to","聴く",7],["look at","見る",7],["wait for","待つ",7],["thanks to","～のおかげで",7]
 ];
 
-// 54 Items (Title: 6, Item: 48)
 const ITEM_BANK = [];
 const titleNames = ['見習い工員','一人前工員','スピードスター','コンボマスター','単語博士','工場長'];
 for(let i=1; i<=6; i++){
@@ -252,27 +243,26 @@ for(let i=1; i<=48; i++){
 /* =================================================================
    3. LOCAL STATE & FIRESTORE SYNC
 ================================================================= */
-let currentUser = null; // { name, equippedTitle, dailyMoney, lastActiveDate, items: { id: { count, giftable } }, wordStats: { word: { c, t } } }
+let currentUser = null;
 
 function getTodayStr(){ return new Date().toISOString().split('T')[0]; }
 
 async function loadUserData(username){
-  const ref = doc(db, "users", username);
+  const cleanName = username.trim().replace(/[\/\s]/g, '_');
+  const ref = doc(db, "users", cleanName);
   const snap = await getDoc(ref);
   const today = getTodayStr();
 
   if(snap.exists()){
     currentUser = snap.data();
-    // 日付跨ぎチェック
     if(currentUser.lastActiveDate !== today){
       currentUser.dailyMoney = 0;
       currentUser.lastActiveDate = today;
       await updateDoc(ref, { dailyMoney: 0, lastActiveDate: today });
     }
   } else {
-    // 新規作成
     currentUser = {
-      name: username,
+      name: cleanName,
       equippedTitle: 'title_1',
       dailyMoney: 0,
       lastActiveDate: today,
@@ -281,7 +271,7 @@ async function loadUserData(username){
     };
     await setDoc(ref, currentUser);
   }
-  localStorage.setItem('wf_username', username);
+  localStorage.setItem('wf_username', cleanName);
   checkIncomingPresents();
 }
 
@@ -292,7 +282,7 @@ async function saveUserData(){
 }
 
 /* =================================================================
-   4. INCOMING PRESENTS (サーバーレスP2P/Firestore受取箱)
+   4. INCOMING PRESENTS
 ================================================================= */
 async function checkIncomingPresents(){
   if(!currentUser) return;
@@ -303,13 +293,11 @@ async function checkIncomingPresents(){
     const pData = pDoc.data();
     const itemId = pData.itemId;
     
-    // パターンA: 自分のコレクションストックを追加（giftableも+1）
     if(!currentUser.items[itemId]) currentUser.items[itemId] = { count: 0, giftable: 0 };
     currentUser.items[itemId].count += 1;
     currentUser.items[itemId].giftable += 1;
     
-    alert(`🎁 プレイヤー [${pData.from}] から【${pData.itemName}】が届きました！`);
-    // プレゼント受取削除
+    alert(`🎁 工員 [${pData.from}] から【${pData.itemName}】が届きました！`);
     await runTransaction(db, async (tx) => { tx.delete(pDoc.ref); });
   }
   saveUserData();
@@ -317,7 +305,7 @@ async function checkIncomingPresents(){
 }
 
 /* =================================================================
-   5. UI CONTROLLER & SCREEN NAVIGATION
+   5. UI CONTROLLER
 ================================================================= */
 const screens = {
   reg: document.getElementById('screen-reg'),
@@ -342,11 +330,11 @@ function updateUI(){
 }
 
 /* =================================================================
-   6. GAME LOGIC (出題アルゴリズム & バイクコンベア)
+   6. GAME LOGIC
 ================================================================= */
 let game = {
   round: 0, money: 0, combo: 0, level: 1, currentWord: null,
-  recentWords: [], currentSlots: [], spawnedTiles: []
+  recentWords: [], currentSlots: []
 };
 
 function startQuizGame(){
@@ -356,20 +344,16 @@ function startQuizGame(){
 }
 
 function selectNextWord(){
-  // 1. 直近3問を除外
   const pool = WORD_BANK.filter(w => !game.recentWords.includes(w[0]));
 
-  // 2. 正解率0%（未回答）または弱点単語の重み付け
   const candidates = pool.map(w => {
     const stat = currentUser.wordStats[w[0]];
-    const rate = stat && stat.t > 0 ? (stat.c / stat.t) : 0; // 未回答は0%
+    const rate = stat && stat.t > 0 ? (stat.c / stat.t) : 0;
     const levelDiff = Math.abs(w[2] - game.level);
-    // 重み計算: 低正解率 ＋ 現在ゲームレベルに近い難易度
     const weight = (1.1 - rate) * 50 + (7 - levelDiff) * 10;
     return { word: w, weight: Math.max(1, weight) };
   });
 
-  // 重み付け抽選
   let totalWeight = candidates.reduce((a, b) => a + b.weight, 0);
   let random = Math.random() * totalWeight;
   for(let c of candidates){
@@ -399,13 +383,11 @@ function nextRound(){
   game.recentWords.push(wData[0]);
   if(game.recentWords.length > 3) game.recentWords.shift();
 
-  // 日本語表示 & スタッツ
   document.getElementById('order-jp').textContent = wData[1];
   const stat = currentUser.wordStats[wData[0]] || { c:0, t:0 };
   const rateStr = stat.t > 0 ? Math.round((stat.c/stat.t)*100) : 0;
   document.getElementById('order-stats').textContent = `正解率: ${rateStr}% (${stat.c}/${stat.t})`;
 
-  // スロット生成（空白・スペース対応）
   const slotsContainer = document.getElementById('slots');
   slotsContainer.innerHTML = '';
   game.currentSlots = [];
@@ -419,31 +401,29 @@ function nextRound(){
     game.currentSlots.push({ char: char, filled: char === ' ' });
   });
 
-  spawnTiles(wData[0]);
+  requestAnimationFrame(() => spawnTiles(wData[0]));
 }
 
 function spawnTiles(wordStr){
   const container = document.getElementById('tile-container');
   container.innerHTML = '';
-  game.spawnedTiles = [];
 
-  // 必要な文字 + ランダミーダミー文字
   let chars = wordStr.replace(/ /g, '').split('');
   const dummyCount = Math.max(3, 8 - chars.length);
   const alphabet = "abcdefghijklmnopqrstuvwxyz";
   for(let i=0; i<dummyCount; i++){
     chars.push(alphabet[Math.floor(Math.random()*alphabet.length)]);
   }
-  // シャッフル
   chars.sort(() => Math.random() - 0.5);
 
-  const containerWidth = container.clientWidth || 360;
+  const containerWidth = container.clientWidth || 320;
+  const step = Math.min(52, Math.floor((containerWidth - 50) / chars.length));
+
   chars.forEach((char, idx) => {
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.textContent = char;
-    // 等間隔にコンベア上に配置
-    const leftPos = (idx * 60) % (containerWidth - 50);
+    const leftPos = Math.max(10, idx * step);
     tile.style.left = leftPos + 'px';
 
     tile.onclick = () => onTileClick(tile, char);
@@ -452,25 +432,21 @@ function spawnTiles(wordStr){
 }
 
 function onTileClick(tileElem, char){
-  // 次の未入力スロットを探す
   const nextSlotIdx = game.currentSlots.findIndex(s => !s.filled);
   if(nextSlotIdx === -1) return;
 
   const expectedChar = game.currentSlots[nextSlotIdx].char.toLowerCase();
   if(char.toLowerCase() === expectedChar){
-    // 正解文字
     game.currentSlots[nextSlotIdx].filled = true;
     const slotsUI = document.getElementById('slots').children;
     slotsUI[nextSlotIdx].textContent = game.currentSlots[nextSlotIdx].char;
     slotsUI[nextSlotIdx].classList.add('filled');
     tileElem.style.display = 'none';
 
-    // クリア判定
     if(game.currentSlots.every(s => s.filled)){
       onWordComplete(true);
     }
   } else {
-    // お手つき（コンボリセット）
     game.combo = 0;
     document.getElementById('hud-combo').textContent = 'x0';
     tileElem.style.background = '#ff4757';
@@ -489,11 +465,10 @@ function onWordComplete(success){
     const reward = 100 + (game.combo * 20);
     game.money += reward;
 
-    // 連続正解でゲーム内難易度上昇
     if(game.combo % 2 === 0 && game.level < 7) game.level++;
   }
 
-  setTimeout(nextRound, 800);
+  setTimeout(nextRound, 600);
 }
 
 /* =================================================================
@@ -519,7 +494,7 @@ function updateColUI(){
       card.innerHTML = `
         <div class="item-icon">${item.icon}</div>
         <div class="item-name">${isOwned ? item.name : '？？？？'}</div>
-        <div class="item-count">${isOwned ? '所持:'+uItem.count+' (贈答可:'+uItem.giftable+')' : '未所持'}</div>
+        <div class="item-count">${isOwned ? '所持:'+uItem.count+' (贈呈可:'+uItem.giftable+')' : '未所持'}</div>
       `;
       card.onclick = () => openItemModal(item, uItem);
       grid.appendChild(card);
@@ -566,7 +541,6 @@ function openItemModal(item, uItem){
       actions.appendChild(btnEq);
     }
 
-    // パターンA: giftableCount > 0 のみ送信可能
     if(uItem.giftable > 0){
       const btnGift = document.createElement('button');
       btnGift.className = 'btn purple';
@@ -585,9 +559,10 @@ function openItemModal(item, uItem){
   document.getElementById('modal').classList.remove('hidden');
 }
 
-function closeModal(){ document.getElementById('modal').classList.add('hidden'); }
+function closeModal(){ 
+  document.getElementById('modal').classList.add('hidden'); 
+}
 
-// ガチャ (¥1,000)
 document.getElementById('btn-draw-gacha').onclick = async () => {
   if(currentUser.dailyMoney < 1000){
     alert('本日のおかねが足りません！(¥1,000必要)');
@@ -598,13 +573,12 @@ document.getElementById('btn-draw-gacha').onclick = async () => {
 
   currentUser.dailyMoney -= 1000;
   
-  // ガチャ抽せん（未所持優先）
   const unowned = ITEM_BANK.filter(i => !currentUser.items[i.id] || currentUser.items[i.id].count === 0);
   const picked = unowned.length > 0 ? unowned[Math.floor(Math.random()*unowned.length)] : ITEM_BANK[Math.floor(Math.random()*ITEM_BANK.length)];
 
   if(!currentUser.items[picked.id]) currentUser.items[picked.id] = { count: 0, giftable: 0 };
   currentUser.items[picked.id].count += 1;
-  currentUser.items[picked.id].giftable += 1; // 1回につき1回送信権獲得
+  currentUser.items[picked.id].giftable += 1;
 
   await saveUserData();
   updateUI();
@@ -620,10 +594,10 @@ let rankingCache = { data: null, time: 0 };
 
 async function loadRanking(){
   const listEl = document.getElementById('rank-list');
-  listEl.innerHTML = '<div style="color:#aaa;text-align:center;">読み込み中...</div>';
+  listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">読み込み中...</div>';
 
   const now = Date.now();
-  if(rankingCache.data && (now - rankingCache.time < 180000)){ // 3分キャッシュ
+  if(rankingCache.data && (now - rankingCache.time < 180000)){
     renderRankingList(rankingCache.data);
     return;
   }
@@ -635,7 +609,7 @@ async function loadRanking(){
     rankingCache = { data: data, time: now };
     renderRankingList(data);
   } catch(e) {
-    listEl.innerHTML = '<div style="color:#ff4757;text-align:center;">ランキング取得エラー</div>';
+    listEl.innerHTML = '<div style="color:#ff4757;text-align:center;padding:20px;">ランキング取得エラー</div>';
   }
 }
 
@@ -656,7 +630,6 @@ function renderRankingList(data){
       <div class="rank-val">¥${(u.dailyMoney||0).toLocaleString()}</div>
     `;
 
-    // プレゼント対象選択（自分以外）
     if(u.name !== currentUser.name){
       item.style.cursor = 'pointer';
       item.onclick = () => promptGiftItem(u.name);
@@ -666,7 +639,6 @@ function renderRankingList(data){
 }
 
 async function promptGiftItem(targetName){
-  // プレゼント可能なアイテムの一覧
   const giftables = ITEM_BANK.filter(i => currentUser.items[i.id] && currentUser.items[i.id].giftable > 0);
   if(giftables.length === 0){
     alert('プレゼント可能なアイテムを所持していません。');
@@ -680,10 +652,8 @@ async function promptGiftItem(targetName){
   if(!isNaN(idx) && giftables[idx]){
     const item = giftables[idx];
     
-    // トランザクション処理でプレゼント送信
     try {
       await runTransaction(db, async (tx) => {
-        // 相手のpresentsサブコレクションにメッセージ追加
         const presRef = doc(collection(db, "users", targetName, "presents"));
         tx.set(presRef, {
           from: currentUser.name,
@@ -693,7 +663,6 @@ async function promptGiftItem(targetName){
         });
       });
 
-      // パターンA: 自分リストの所持数(count)は減らさず、giftableのみ-1
       currentUser.items[item.id].giftable -= 1;
       await saveUserData();
       alert(`【${item.name}】を工員 [${targetName}] にプレゼントしました！`);
@@ -708,18 +677,18 @@ async function promptGiftItem(targetName){
    9. INITIALIZATION & EVENTS
 ================================================================= */
 document.getElementById('btn-do-reg').onclick = async () => {
-  const name = document.getElementById('reg-name-input').value.trim();
-  if(!name){ alert('名前を入力してください。'); return; }
+  const nameInput = document.getElementById('reg-name-input').value.trim();
+  if(!nameInput){ alert('名前を入力してください。'); return; }
 
-  // ドキュメントIDでの重複判定
-  const ref = doc(db, "users", name);
+  const cleanName = nameInput.replace(/[\/\s]/g, '_');
+  const ref = doc(db, "users", cleanName);
   const snap = await getDoc(ref);
   if(snap.exists()){
     alert('その名前は既に使用されています。別の名前を入力してください。');
     return;
   }
 
-  await loadUserData(name);
+  await loadUserData(cleanName);
   showScreen('start');
 };
 
