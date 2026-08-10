@@ -59,7 +59,11 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .gauge-label{font-family:var(--font-m);font-size:9px;color:#8b909c;}
 .gauge-value{font-family:var(--font-d);font-size:14px;color:var(--yellow);}
 
-.order-slip{margin:8px 0 4px;background:var(--paper);border-radius:8px;padding:10px 16px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;position:relative;}
+/* Timer Bar */
+.timer-wrap{width:100%;max-width:440px;height:8px;background:#14161b;border:1px solid #464c58;border-radius:4px;margin-top:6px;overflow:hidden;position:relative;}
+.timer-bar{height:100%;width:100%;background:linear-gradient(90deg, var(--green), var(--yellow), var(--red));transition:width 0.1s linear;}
+
+.order-slip{margin:6px 0 4px;background:var(--paper);border-radius:8px;padding:10px 16px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;position:relative;}
 .order-jp{font-size:22px;font-weight:900;color:#2a2010;}
 .order-stats{font-size:10px;color:#7a6b52;margin-top:2px;}
 .btn-speech{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;}
@@ -104,7 +108,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
-.modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:18px;max-width:340px;width:100%;text-align:center;}
+.modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:18px;max-width:360px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;}
 input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #464c58;background:#14161b;color:#fff;font-size:14px;margin:10px 0;outline:none;}
 </style>
 </head>
@@ -147,6 +151,11 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
       <div class="gauge"><div class="gauge-label">PROGRESS</div><div class="gauge-value" id="hud-prog">1/10</div></div>
     </div>
 
+    <!-- Timer Gauge Bar -->
+    <div class="timer-wrap">
+      <div class="timer-bar" id="timer-bar"></div>
+    </div>
+
     <div class="order-slip">
       <div class="order-jp" id="order-jp">...</div>
       <div class="order-stats" id="order-stats">習熟度: 未学習</div>
@@ -164,7 +173,7 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <!-- COLLECTION SCREEN -->
   <div class="screen hidden" id="screen-col">
     <div class="panel-card">
-      <div class="panel-title">📖 コレクションノート</div>
+      <div class="panel-title" id="col-title">📖 コレクションノート</div>
       <div class="tab-row">
         <button class="tab-btn active" id="tab-btn-items">コレクション</button>
         <button class="tab-btn" id="tab-btn-words">単語図鑑</button>
@@ -193,7 +202,7 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <div class="screen hidden" id="screen-rank">
     <div class="panel-card">
       <div class="panel-title">🏆 獲得報奨金ランキング</div>
-      <div style="font-size:10px;color:#aaa;text-align:center;margin-bottom:8px;">※その日1日に獲得した合計報奨金で競います</div>
+      <div style="font-size:10px;color:#aaa;text-align:center;margin-bottom:8px;">※プレイヤーをタップしてコレクション閲覧やプレゼント送付</div>
       <div class="grid-container" id="rank-list" style="display:block;"></div>
       <button class="btn secondary" style="margin-top:10px;" id="btn-rank-back">もどる</button>
     </div>
@@ -315,7 +324,6 @@ for(let i=1; i<=6; i++){
 
 /* 親しみのある厳選48個のアイテムデータ */
 const friendlyItems = [
-  // 身近な生き物 (8種)
   { name: '犬', icon: '🐶', desc: '人懐っこくて元気いっぱいなワンちゃん。' },
   { name: '猫', icon: '🐱', desc: '気まぐれだけど愛らしいネコちゃん。' },
   { name: 'うさぎ', icon: '🐰', desc: '長い耳とぴょんぴょん跳ねる姿がかわいいウサギ。' },
@@ -324,8 +332,6 @@ const friendlyItems = [
   { name: 'ペンギン', icon: '🐧', desc: 'よちよち歩きが得意な南極のペンギン。' },
   { name: 'チョウチョ', icon: '🦋', desc: '花から花へひらひらと舞う美しいチョウ。' },
   { name: 'ミツバチ', icon: '🐝', desc: '甘いハチミツを集める働きもののミツバチ。' },
-
-  // 食べ物・スイーツ (10種)
   { name: 'おにぎり', icon: '🍙', desc: 'ふっくら炊き上げたご飯の定番おにぎり。' },
   { name: '食パン', icon: '🍞', desc: 'こんがり焼くと香ばしいふんわり食パン。' },
   { name: 'カレーライス', icon: '🍛', desc: 'スパイスの香りが食欲をそそる大人気メニュー。' },
@@ -336,8 +342,6 @@ const friendlyItems = [
   { name: 'プリン', icon: '🍮', desc: 'ほろ苦いカラメルソースがかかったなめらかプリン。' },
   { name: 'ソフトクリーム', icon: '🍦', desc: '濃厚なミルクの甘みが広がる冷たいスイーツ。' },
   { name: 'キャンディー', icon: '🍬', desc: 'ポップで甘いカラフルなお菓子。' },
-
-  // 果物・野菜 (8種)
   { name: 'りんご', icon: '🍎', desc: 'シャキッとした歯ごたえの真っ赤なりんご。' },
   { name: 'バナナ', icon: '🍌', desc: '栄養満点で甘くて美味しい黄色いバナナ。' },
   { name: 'いちご', icon: '🍓', desc: '甘酸っぱくてかわいらしいイチゴ。' },
@@ -346,16 +350,12 @@ const friendlyItems = [
   { name: 'トマト', icon: '🍅', desc: 'リコピンたっぷりの真っ赤な熟したトマト。' },
   { name: 'にんじん', icon: '🥕', desc: '鮮やかなオレンジ色の栄養たっぷりな野菜。' },
   { name: 'トウモロコシ', icon: '🌽', desc: '甘い粒がギュッと詰まったトウモロコシ。' },
-
-  // 乗り物 (6種)
   { name: '新幹線', icon: '🚅', desc: '目的地へスピーディーに走る超特急電車。' },
   { name: 'バス', icon: '🚌', desc: '街のみんなを乗せて走る大きな路線バス。' },
   { name: '消防車', icon: '🚒', desc: '街の安全を守る真っ赤な頼もしい車。' },
   { name: 'パトカー', icon: '🚓', desc: 'パトロールをして平和を守る警察車両。' },
   { name: '飛行機', icon: '✈️', desc: '大空を高く飛び越えて遠くへ運んでくれるジェット機。' },
   { name: 'ロケット', icon: '🚀', desc: '宇宙を目指して勢いよく飛び立つロケット。' },
-
-  // 花・自然・宇宙 (8種)
   { name: 'チューリップ', icon: '🌷', desc: '春の訪れを知らせてくれる綺麗なお花。' },
   { name: 'ヒマワリ', icon: '🌻', desc: '太陽に向かって大輪を咲かせる夏の花。' },
   { name: '虹', icon: '🌈', desc: '雨上がりの空にかかる7色の架け橋。' },
@@ -364,8 +364,6 @@ const friendlyItems = [
   { name: '星', icon: '⭐', desc: 'キラキラと夜空に光るきれいなお星さま。' },
   { name: '地球', icon: '🌍', desc: '青く美しく輝くわたしたちのプラネット。' },
   { name: '雪の結晶', icon: '❄️', desc: '冬の空から舞い降りる幾何学模様の結晶。' },
-
-  // 身の回りのもの・季節 (8種)
   { name: '風船', icon: '🎈', desc: 'ふんわりと空へ浮かんでいくカラフルなバルーン。' },
   { name: 'プレゼント', icon: '🎁', desc: '何が入っているかワクワクするリボン付きの箱。' },
   { name: '傘', icon: '☔', desc: '雨の日のお出かけを楽しくしてくれるレインパラソル。' },
@@ -387,7 +385,6 @@ friendlyItems.forEach((item, idx) => {
   });
 });
 
-/* 正解回数から4段階の習熟度文字列を返す */
 function getProficiencyLabel(correctCount) {
   if (!correctCount || correctCount <= 0) return '未学習';
   if (correctCount === 1) return 'あいまい';
@@ -399,6 +396,7 @@ function getProficiencyLabel(correctCount) {
    4. LOCAL STATE & FIRESTORE SYNC
 ================================================================= */
 let currentUser = null;
+let viewingUserData = null; // 他プレイヤー閲覧用データ
 
 function getTodayStr(){ return new Date().toISOString().split('T')[0]; }
 
@@ -515,17 +513,69 @@ function updateUI(){
 }
 
 /* =================================================================
-   7. GAME LOGIC
+   7. GAME LOGIC & TIMER & SPEED BONUS
 ================================================================= */
 let game = {
   round: 0, money: 0, combo: 0, level: 1, currentWord: null,
-  recentWords: [], currentSlots: [], missCount: 0
+  recentWords: [], currentSlots: [], missCount: 0,
+  startTime: 0, timerInterval: null, timeLeft: 15
 };
 
+const QUESTION_TIMEOUT_SEC = 15; // 1問あたりの制限時間(秒)
+
 function startQuizGame(){
-  game.round = 0; game.money = 0; game.combo = 0; game.level = 1; game.recentWords = [];
+  game.round = 0; 
+  game.money = 0; 
+  game.combo = 0; 
+  game.level = 1; 
+  game.recentWords = [];
+  game.startTime = Date.now();
   showScreen('game');
   nextRound();
+}
+
+function startTimer() {
+  stopTimer();
+  game.timeLeft = QUESTION_TIMEOUT_SEC;
+  updateTimerUI();
+
+  const startTime = Date.now();
+  game.timerInterval = setInterval(() => {
+    const elapsed = (Date.now() - startTime) / 1000;
+    game.timeLeft = Math.max(0, QUESTION_TIMEOUT_SEC - elapsed);
+    updateTimerUI();
+
+    if (game.timeLeft <= 0) {
+      stopTimer();
+      onTimeOut();
+    }
+  }, 100);
+}
+
+function stopTimer() {
+  if (game.timerInterval) {
+    clearInterval(game.timerInterval);
+    game.timerInterval = null;
+  }
+}
+
+function updateTimerUI() {
+  const bar = document.getElementById('timer-bar');
+  const pct = (game.timeLeft / QUESTION_TIMEOUT_SEC) * 100;
+  bar.style.width = `${pct}%`;
+}
+
+function onTimeOut() {
+  playIncorrectSE();
+  game.combo = 0;
+  game.missCount++;
+  document.getElementById('hud-combo').textContent = 'x0';
+  document.getElementById('hud-miss').textContent = `${game.missCount}/3`;
+
+  setTimeout(() => {
+    alert(`⏰ 制限時間切れ！正解は「${game.currentWord[0]}」でした。次の問題へ進みます。`);
+    onWordComplete(false);
+  }, 100);
 }
 
 function selectNextWord(){
@@ -535,7 +585,6 @@ function selectNextWord(){
     const stat = currentUser.wordStats[w[0]];
     const correctCount = stat ? stat.c : 0;
     const levelDiff = Math.abs(w[2] - game.level);
-    // 正解数が少ないほど出現率を高く調整
     const weight = Math.max(1, (5 - correctCount) * 10 + (7 - levelDiff) * 5);
     return { word: w, weight: weight };
   });
@@ -550,10 +599,20 @@ function selectNextWord(){
 }
 
 function nextRound(){
+  stopTimer();
+
   if(game.round >= 10){
-    alert(`🎉 操業終了！\n今回の獲得金額：¥${game.money.toLocaleString()}`);
-    currentUser.wallet = (currentUser.wallet || 0) + game.money;
-    currentUser.dailyMoney = (currentUser.dailyMoney || 0) + game.money;
+    const totalTimeSec = Math.floor((Date.now() - game.startTime) / 1000);
+    // スピードボーナス計算（200秒以内で早く解くほどボーナス支給）
+    let speedBonus = Math.max(0, Math.floor((200 - totalTimeSec) * 15));
+    if (speedBonus > 2000) speedBonus = 2000;
+
+    const totalEarned = game.money + speedBonus;
+
+    alert(`🎉 操業終了！\n\n・かかった時間: ${totalTimeSec}秒\n・問題報酬: ¥${game.money.toLocaleString()}\n・スピードボーナス: ¥${speedBonus.toLocaleString()}\n---------------------\n合計獲得金額：¥${totalEarned.toLocaleString()}`);
+
+    currentUser.wallet = (currentUser.wallet || 0) + totalEarned;
+    currentUser.dailyMoney = (currentUser.dailyMoney || 0) + totalEarned;
     saveUserData();
     showScreen('start');
     return;
@@ -592,7 +651,10 @@ function nextRound(){
     game.currentSlots.push({ char: char, filled: char === ' ' });
   });
 
-  requestAnimationFrame(() => spawnTiles(wData[0]));
+  requestAnimationFrame(() => {
+    spawnTiles(wData[0]);
+    startTimer();
+  });
 }
 
 function spawnTiles(wordStr){
@@ -626,6 +688,7 @@ function onTileClick(tileElem, char){
     tileElem.style.visibility = 'hidden';
 
     if(game.currentSlots.every(s => s.filled)){
+      stopTimer();
       onWordComplete(true);
     }
   } else {
@@ -639,6 +702,7 @@ function onTileClick(tileElem, char){
     setTimeout(() => tileElem.style.borderColor = '#5a4a2a', 300);
 
     if(game.missCount >= 3){
+      stopTimer();
       setTimeout(() => {
         alert(`❌ 3回間違えました！正解は「${game.currentWord[0]}」でした。次の問題へ進みます。`);
         onWordComplete(false);
@@ -677,9 +741,12 @@ function updateColUI(){
   const grid = document.getElementById('col-grid');
   grid.innerHTML = '';
 
+  const targetData = viewingUserData || currentUser;
+  document.getElementById('col-title').textContent = viewingUserData ? `📖 ${viewingUserData.name} のコレクション` : '📖 コレクションノート';
+
   if(currentColTab === 'items'){
     ITEM_BANK.forEach(item => {
-      const uItem = currentUser.items[item.id] || { count: 0, giftable: 0 };
+      const uItem = (targetData.items && targetData.items[item.id]) || { count: 0, giftable: 0 };
       const isOwned = uItem.count > 0;
       const numFormatted = 'No.' + String(item.num).padStart(3, '0');
 
@@ -691,12 +758,14 @@ function updateColUI(){
         <div class="item-name">${isOwned ? item.name : '？？？？'}</div>
         <div class="item-count">${isOwned ? '所持:'+uItem.count : '未所持'}</div>
       `;
-      card.onclick = () => openItemModal(item, uItem);
+      if (!viewingUserData) {
+        card.onclick = () => openItemModal(item, uItem);
+      }
       grid.appendChild(card);
     });
   } else {
     WORD_BANK.forEach(([word, jp], idx) => {
-      const stat = currentUser.wordStats[word];
+      const stat = targetData.wordStats ? targetData.wordStats[word] : null;
       const correctCount = stat ? stat.c : 0;
       const profLabel = getProficiencyLabel(correctCount);
       const isLearned = correctCount > 0;
@@ -796,7 +865,7 @@ document.getElementById('btn-draw-gacha-1').onclick = () => drawGachaProcess(1, 
 document.getElementById('btn-draw-gacha-3').onclick = () => drawGachaProcess(3, 4000);
 
 /* =================================================================
-   9. RANKING & PRESENT TRANSACTION
+   9. RANKING & OTHER PLAYER ACTIONS
 ================================================================= */
 let rankingCache = { data: null, time: 0 };
 
@@ -840,10 +909,50 @@ function renderRankingList(data){
 
     if(u.name !== currentUser.name){
       item.style.cursor = 'pointer';
-      item.onclick = () => promptGiftItem(u.name);
+      item.onclick = () => openPlayerActionModal(u);
     }
     listEl.appendChild(item);
   });
+}
+
+function openPlayerActionModal(targetUserData) {
+  const tObj = ITEM_BANK.find(i => i.id === targetUserData.equippedTitle);
+  
+  document.getElementById('modal-icon').textContent = '👤';
+  document.getElementById('modal-title').textContent = targetUserData.name;
+  document.getElementById('modal-sub').textContent = `称号: [${tObj ? tObj.name : 'なし'}]`;
+  document.getElementById('modal-desc').textContent = '行う操作を選択してください。';
+
+  const actions = document.getElementById('modal-actions');
+  actions.innerHTML = '';
+
+  const btnViewCol = document.createElement('button');
+  btnViewCol.className = 'btn';
+  btnViewCol.textContent = '📖 コレクションを見る';
+  btnViewCol.onclick = () => {
+    closeModal();
+    viewingUserData = targetUserData;
+    updateColUI();
+    showScreen('col');
+  };
+  actions.appendChild(btnViewCol);
+
+  const btnGift = document.createElement('button');
+  btnGift.className = 'btn purple';
+  btnGift.textContent = '🎁 アイテムをプレゼント';
+  btnGift.onclick = () => {
+    closeModal();
+    promptGiftItem(targetUserData.name);
+  };
+  actions.appendChild(btnGift);
+
+  const btnClose = document.createElement('button');
+  btnClose.className = 'btn secondary';
+  btnClose.textContent = '閉じる';
+  btnClose.onclick = closeModal;
+  actions.appendChild(btnClose);
+
+  document.getElementById('modal').classList.remove('hidden');
 }
 
 async function promptGiftItem(targetName){
@@ -918,11 +1027,18 @@ document.getElementById('btn-do-reg').onclick = async () => {
 };
 
 document.getElementById('btn-start-game').onclick = startQuizGame;
-document.getElementById('btn-open-col').onclick = () => { updateColUI(); showScreen('col'); };
+document.getElementById('btn-open-col').onclick = () => { 
+  viewingUserData = null; // 自分自身のコレクションを表示
+  updateColUI(); 
+  showScreen('col'); 
+};
 document.getElementById('btn-open-shop').onclick = () => showScreen('shop');
 document.getElementById('btn-open-rank').onclick = () => { loadRanking(); showScreen('rank'); };
 
-document.getElementById('btn-col-back').onclick = () => showScreen('start');
+document.getElementById('btn-col-back').onclick = () => {
+  viewingUserData = null;
+  showScreen('start');
+};
 document.getElementById('btn-shop-back').onclick = () => showScreen('start');
 document.getElementById('btn-rank-back').onclick = () => showScreen('start');
 
