@@ -43,31 +43,34 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 
 /* Game HUD & Conveyor */
 #screen-game{padding:8px;justify-content:flex-start;}
-.hud{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:8px 12px;background:#1d2027;border:2px solid #464c58;border-radius:12px;width:100%;max-width:440px;}
+.hud{display:flex;justify-content:space-between;align-items:center;gap:4px;padding:8px;background:#1d2027;border:2px solid #464c58;border-radius:12px;width:100%;max-width:440px;}
 .gauge{text-align:center;flex:1;}
 .gauge-label{font-family:var(--font-m);font-size:9px;color:#8b909c;}
-.gauge-value{font-family:var(--font-d);font-size:16px;color:var(--yellow);}
+.gauge-value{font-family:var(--font-d);font-size:15px;color:var(--yellow);}
 
-.order-slip{margin:10px 0 6px;background:var(--paper);border-radius:8px;padding:12px 20px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;}
-.order-jp{font-size:24px;font-weight:900;color:#2a2010;}
+.order-slip{margin:8px 0 4px;background:var(--paper);border-radius:8px;padding:10px 16px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;position:relative;}
+.order-jp{font-size:22px;font-weight:900;color:#2a2010;}
 .order-stats{font-size:10px;color:#7a6b52;margin-top:2px;}
+.btn-speech{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;}
 
-.slots{display:flex;justify-content:center;align-items:center;gap:4px;padding:8px 0;min-height:64px;width:100%;flex-wrap:wrap;}
-.slot{width:36px;height:46px;border:2px dashed #565d6b;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:22px;color:var(--paper);background:rgba(0,0,0,0.2);}
+.slots{display:flex;justify-content:center;align-items:center;gap:4px;padding:6px 0;min-height:56px;width:100%;flex-wrap:wrap;}
+.slot{width:34px;height:44px;border:2px dashed #565d6b;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:20px;color:var(--paper);background:rgba(0,0,0,0.2);}
 .slot.filled{border-style:solid;border-color:var(--green);background:#2a3530;}
 
-.belt-wrap{position:relative;width:100%;max-width:440px;flex:1;margin-top:8px;border-radius:12px;overflow:hidden;border:3px solid #464c58;background:#1a1c21;min-height:180px;}
+/* Belt & Tiles (Flexbox Layout to prevent overlap) */
+.belt-wrap{position:relative;width:100%;max-width:440px;flex:1;margin-top:6px;border-radius:12px;overflow:hidden;border:3px solid #464c58;background:#1a1c21;min-height:200px;display:flex;align-items:center;justify-content:center;padding:12px;}
 .belt-track{position:absolute;inset:0;background:repeating-linear-gradient(115deg, #34383f 0 20px, #131417 20px 40px);background-size:200% 100%;animation:beltmove 1.5s linear infinite;}
 @keyframes beltmove{from{background-position:0 0;}to{background-position:-56.5px 0;}}
 
-.tile-container{position:absolute;inset:0;overflow:hidden;}
+/* 1.5倍サイズのタイルと2〜3行対応レイアウト */
+.tile-container{position:relative;z-index:2;width:100%;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;max-height:100%;overflow-y:auto;}
 .tile{
-  position:absolute; width:44px; height:52px; background:linear-gradient(180deg,#e8dcc0,#c9b98d);
-  border:2px solid #5a4a2a; border-radius:6px; display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-d); font-size:24px; color:#2a2010; cursor:pointer; box-shadow:0 4px 6px rgba(0,0,0,0.3);
-  top:50%; transform:translateY(-50%); transition:transform 0.1s;
+  width:60px; height:70px; background:linear-gradient(180deg,#e8dcc0,#c9b98d);
+  border:3px solid #5a4a2a; border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-family:var(--font-d); font-size:32px; color:#2a2010; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.4);
+  transition:transform 0.1s; flex-shrink:0;
 }
-.tile:active{transform:translateY(-50%) scale(0.95);}
+.tile:active{transform:scale(0.92);}
 
 /* Collection & Lists */
 .tab-row{display:flex;gap:6px;margin-bottom:10px;}
@@ -129,13 +132,14 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
     <div class="hud">
       <div class="gauge"><div class="gauge-label">獲得金</div><div class="gauge-value" id="hud-money">¥0</div></div>
       <div class="gauge"><div class="gauge-label">COMBO</div><div class="gauge-value" id="hud-combo">x0</div></div>
-      <div class="gauge"><div class="gauge-label">難易度LV</div><div class="gauge-value" id="hud-diff">1</div></div>
+      <div class="gauge"><div class="gauge-label">ミス</div><div class="gauge-value" id="hud-miss" style="color:var(--red);">0/3</div></div>
       <div class="gauge"><div class="gauge-label">PROGRESS</div><div class="gauge-value" id="hud-prog">1/10</div></div>
     </div>
 
     <div class="order-slip">
       <div class="order-jp" id="order-jp">...</div>
       <div class="order-stats" id="order-stats">正解率: --% (0/0)</div>
+      <button class="btn-speech" id="btn-speech">🔊</button>
     </div>
 
     <div class="slots" id="slots"></div>
@@ -193,7 +197,7 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
 
 </div>
 
-<!-- Firebase SDKs (v10+ Web Modules) -->
+<!-- Firebase SDKs -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
@@ -202,7 +206,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 /* =================================================================
-   1. FIREBASE CONFIG & INITIALIZATION (新プロジェクト e-go-ce300)
+   1. FIREBASE CONFIG & INITIALIZATION
 ================================================================= */
 const firebaseConfig = {
   apiKey: "AIzaSyDU3AjEG_M62lXdp22BEe-qWDL4vBE4kag",
@@ -219,7 +223,67 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 /* =================================================================
-   2. MASTER DATA (100 Words & 54 Items)
+   2. AUDIO SYNTHESIS & SOUND EFFECTS (効果音・読み上げ)
+================================================================= */
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+// 正解効果音 (ピロリーン♪)
+function playCorrectSE() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc1.type = 'sine'; osc2.type = 'sine';
+  osc1.frequency.setValueAtTime(523.25, now); // C5
+  osc1.frequency.setValueAtTime(659.25, now + 0.08); // E5
+  osc2.frequency.setValueAtTime(783.99, now + 0.16); // G5
+  osc2.frequency.setValueAtTime(1046.50, now + 0.24); // C6
+
+  gain.gain.setValueAtTime(0.15, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+  osc1.connect(gain); osc2.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc1.start(now); osc1.stop(now + 0.4);
+  osc2.start(now + 0.16); osc2.stop(now + 0.4);
+}
+
+// 不正解効果音 (ブブー♪)
+function playIncorrectSE() {
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const now = audioCtx.currentTime;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(150, now);
+  osc.frequency.setValueAtTime(110, now + 0.15);
+
+  gain.gain.setValueAtTime(0.2, now);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(now); osc.stop(now + 0.35);
+}
+
+// 読み上げ処理 (Web Speech API)
+function speakWord(text) {
+  if ('speechSynthesis' in window) {
+    window.speechSynthesis.cancel();
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = 'en-US';
+    utter.rate = 0.9;
+    window.speechSynthesis.speak(utter);
+  }
+}
+
+/* =================================================================
+   3. MASTER DATA
 ================================================================= */
 const WORD_BANK = [
   ["cat","猫",1],["dog","犬",1],["egg","卵",1],["book","本",1],["door","ドア",1],["apple","りんご",1],["house","家",1],["water","水",1],["sky","空",1],["paper","紙",1],["river","川",1],["city","都市",1],["time","時間",1],["year","年",1],
@@ -242,7 +306,7 @@ for(let i=1; i<=48; i++){
 }
 
 /* =================================================================
-   3. LOCAL STATE & FIRESTORE SYNC
+   4. LOCAL STATE & FIRESTORE SYNC (0時ランキング1位称号授与対応)
 ================================================================= */
 let currentUser = null;
 
@@ -256,7 +320,9 @@ async function loadUserData(username){
 
   if(snap.exists()){
     currentUser = snap.data();
+    // 日付が変わった場合の処理（前日の1位チェック＆称号授与）
     if(currentUser.lastActiveDate !== today){
+      await checkAndRewardTopPlayer(currentUser.lastActiveDate);
       currentUser.dailyMoney = 0;
       currentUser.lastActiveDate = today;
       await updateDoc(ref, { dailyMoney: 0, lastActiveDate: today });
@@ -276,6 +342,30 @@ async function loadUserData(username){
   checkIncomingPresents();
 }
 
+// 0時時点（日付更新時）でランキング1位の人に6つの称号からランダム授与する処理
+async function checkAndRewardTopPlayer(lastDate){
+  try {
+    const q = query(collection(db, "users"), orderBy("dailyMoney", "desc"), limit(1));
+    const snap = await getDocs(q);
+    if(!snap.empty){
+      const topUser = snap.docs[0].data();
+      if(topUser.name === currentUser.name){
+        // 1位の工員にランダム称号授与
+        const titles = ITEM_BANK.filter(i => i.type === 'title');
+        const pickedTitle = titles[Math.floor(Math.random() * titles.length)];
+        
+        if(!currentUser.items[pickedTitle.id]) currentUser.items[pickedTitle.id] = { count: 0, giftable: 0 };
+        currentUser.items[pickedTitle.id].count += 1;
+        currentUser.items[pickedTitle.id].giftable += 1;
+
+        alert(`👑 前日ランキング1位達成！\n特別称号【${pickedTitle.name}】が授与されました！`);
+      }
+    }
+  } catch(e) {
+    console.error("1位報酬チェックエラー:", e);
+  }
+}
+
 async function saveUserData(){
   if(!currentUser) return;
   const ref = doc(db, "users", currentUser.name);
@@ -283,7 +373,7 @@ async function saveUserData(){
 }
 
 /* =================================================================
-   4. INCOMING PRESENTS
+   5. INCOMING PRESENTS
 ================================================================= */
 async function checkIncomingPresents(){
   if(!currentUser) return;
@@ -306,7 +396,7 @@ async function checkIncomingPresents(){
 }
 
 /* =================================================================
-   5. UI CONTROLLER
+   6. UI CONTROLLER
 ================================================================= */
 const screens = {
   reg: document.getElementById('screen-reg'),
@@ -331,11 +421,11 @@ function updateUI(){
 }
 
 /* =================================================================
-   6. GAME LOGIC
+   7. GAME LOGIC (使わない文字の排除・誤答制限・音声追加)
 ================================================================= */
 let game = {
   round: 0, money: 0, combo: 0, level: 1, currentWord: null,
-  recentWords: [], currentSlots: []
+  recentWords: [], currentSlots: [], missCount: 0
 };
 
 function startQuizGame(){
@@ -374,10 +464,11 @@ function nextRound(){
   }
 
   game.round++;
+  game.missCount = 0; // ミス回数をリセット
   document.getElementById('hud-prog').textContent = `${game.round}/10`;
   document.getElementById('hud-money').textContent = `¥${game.money.toLocaleString()}`;
   document.getElementById('hud-combo').textContent = `x${game.combo}`;
-  document.getElementById('hud-diff').textContent = game.level;
+  document.getElementById('hud-miss').textContent = `0/3`;
 
   const wData = selectNextWord();
   game.currentWord = wData;
@@ -388,6 +479,10 @@ function nextRound(){
   const stat = currentUser.wordStats[wData[0]] || { c:0, t:0 };
   const rateStr = stat.t > 0 ? Math.round((stat.c/stat.t)*100) : 0;
   document.getElementById('order-stats').textContent = `正解率: ${rateStr}% (${stat.c}/${stat.t})`;
+
+  // 音声読み上げ
+  speakWord(wData[0]);
+  document.getElementById('btn-speech').onclick = () => speakWord(wData[0]);
 
   const slotsContainer = document.getElementById('slots');
   slotsContainer.innerHTML = '';
@@ -405,28 +500,22 @@ function nextRound(){
   requestAnimationFrame(() => spawnTiles(wData[0]));
 }
 
+// 使う文字だけに限定したタイルの生成
 function spawnTiles(wordStr){
   const container = document.getElementById('tile-container');
   container.innerHTML = '';
 
+  // 1. 正解に必要な文字をすべて抽出
   let chars = wordStr.replace(/ /g, '').split('');
-  const dummyCount = Math.max(3, 8 - chars.length);
-  const alphabet = "abcdefghijklmnopqrstuvwxyz";
-  for(let i=0; i<dummyCount; i++){
-    chars.push(alphabet[Math.floor(Math.random()*alphabet.length)]);
-  }
+
+  // 2. シャッフル
   chars.sort(() => Math.random() - 0.5);
 
-  const containerWidth = container.clientWidth || 320;
-  const step = Math.min(52, Math.floor((containerWidth - 50) / chars.length));
-
-  chars.forEach((char, idx) => {
+  // 3. タイル生成 (Flexboxで2〜3行に折り返し & 1.5倍サイズ)
+  chars.forEach((char) => {
     const tile = document.createElement('div');
     tile.className = 'tile';
     tile.textContent = char;
-    const leftPos = Math.max(10, idx * step);
-    tile.style.left = leftPos + 'px';
-
     tile.onclick = () => onTileClick(tile, char);
     container.appendChild(tile);
   });
@@ -437,21 +526,37 @@ function onTileClick(tileElem, char){
   if(nextSlotIdx === -1) return;
 
   const expectedChar = game.currentSlots[nextSlotIdx].char.toLowerCase();
+  
   if(char.toLowerCase() === expectedChar){
+    // 正解の処理
+    playCorrectSE();
     game.currentSlots[nextSlotIdx].filled = true;
     const slotsUI = document.getElementById('slots').children;
     slotsUI[nextSlotIdx].textContent = game.currentSlots[nextSlotIdx].char;
     slotsUI[nextSlotIdx].classList.add('filled');
-    tileElem.style.display = 'none';
+    tileElem.style.visibility = 'hidden';
 
     if(game.currentSlots.every(s => s.filled)){
       onWordComplete(true);
     }
   } else {
+    // 不正解の処理
+    playIncorrectSE();
     game.combo = 0;
+    game.missCount++;
     document.getElementById('hud-combo').textContent = 'x0';
-    tileElem.style.background = '#ff4757';
-    setTimeout(() => tileElem.style.background = '', 300);
+    document.getElementById('hud-miss').textContent = `${game.missCount}/3`;
+
+    tileElem.style.borderColor = 'var(--red)';
+    setTimeout(() => tileElem.style.borderColor = '#5a4a2a', 300);
+
+    // 3回間違えたら自動で次の問題へ
+    if(game.missCount >= 3){
+      setTimeout(() => {
+        alert(`❌ 3回間違えました！正解は「${game.currentWord[0]}」でした。次の問題へ進みます。`);
+        onWordComplete(false);
+      }, 200);
+    }
   }
 }
 
@@ -473,7 +578,7 @@ function onWordComplete(success){
 }
 
 /* =================================================================
-   7. COLLECTION NOTEBOOK & GACHA
+   8. COLLECTION NOTEBOOK & GACHA
 ================================================================= */
 let currentColTab = 'items';
 document.getElementById('tab-btn-items').onclick = () => { currentColTab='items'; updateColUI(); };
@@ -523,7 +628,7 @@ function openItemModal(item, uItem){
   document.getElementById('modal-icon').textContent = isOwned ? item.icon : '❓';
   document.getElementById('modal-title').textContent = isOwned ? item.name : '未所持アイテム';
   document.getElementById('modal-sub').textContent = item.type === 'title' ? '【称号】' : '【工場パーツ】';
-  document.getElementById('modal-desc').textContent = isOwned ? item.desc : 'ガチャや操業で獲得できます。';
+  document.getElementById('modal-desc').textContent = isOwned ? item.desc : 'ガチャやランキング報酬で獲得できます。';
 
   const actions = document.getElementById('modal-actions');
   actions.innerHTML = '';
@@ -589,7 +694,7 @@ document.getElementById('btn-draw-gacha').onclick = async () => {
 };
 
 /* =================================================================
-   8. RANKING & PRESENT TRANSACTION
+   9. RANKING & PRESENT TRANSACTION
 ================================================================= */
 let rankingCache = { data: null, time: 0 };
 
@@ -675,7 +780,7 @@ async function promptGiftItem(targetName){
 }
 
 /* =================================================================
-   9. INITIALIZATION & EVENTS
+   10. INITIALIZATION & EVENTS
 ================================================================= */
 document.getElementById('btn-do-reg').onclick = async () => {
   const nameInput = document.getElementById('reg-name-input').value.trim();
