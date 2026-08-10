@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>英語単語クイズゲーム</title>
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #4ecdc4;
+            --accent: #ffe66d;
+            --dark: #2d3436;
+            --light: #f7f1e3;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #70a1ff;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* 画面シェイクアニメーション */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            20% { transform: translate(-3px, 0px) rotate(-1deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            60% { transform: translate(-1px, 2px) rotate(0deg); }
+            80% { transform: translate(-3px, 1px) rotate(-1deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake {
+            animation: shake 0.4s ease-in-out;
+        }
+
+        /* レベルアップ/GOOD文字アニメーション */
+        @keyframes popUpText {
+            0% { transform: scale(0.2) rotate(-10deg); opacity: 0; }
+            50% { transform: scale(1.3) rotate(5deg); opacity: 1; }
+            100% { transform: scale(1) rotate(0deg); opacity: 0; }
+        }
+        .pop-text {
+            position: absolute;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #ff4757;
+            text-shadow: 3px 3px 0 #fff, -3px -3px 0 #fff, 3px -3px 0 #fff, -3px 3px 0 #fff, 5px 5px 10px rgba(0,0,0,0.5);
+            pointer-events: none;
+            animation: popUpText 0.8s ease-out forwards;
+            z-index: 1000;
+        }
+
+        /* メインコンテナ */
+        #game-container {
+            width: 100%;
+            max-width: 480px;
+            height: 100vh;
+            max-height: 850px;
+            background: var(--light);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            box-sizing: border-box;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* 登録画面 */
+        #register-screen h1 {
+            color: var(--dark);
+            margin-bottom: 20px;
+            font-size: 1.8rem;
+            text-align: center;
+        }
+        #username-input {
+            width: 80%;
+            padding: 12px;
+            font-size: 1.1rem;
+            border: 3px solid var(--dark);
+            border-radius: 10px;
+            margin-bottom: 20px;
+            text-align: center;
+            outline: none;
+        }
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #c23616;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        .btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 0 0 #c23616;
+        }
+
+        /* ゲーム画面 */
+        #game-header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin-bottom: 20px;
+        }
+
+        .item-icon-img {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 4px 6px rgba(0,0,0,0.1));
+        }
+
+        #word-display {
+            font-size: 2.2rem;
+            font-weight: bold;
+            color: var(--dark);
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .choice-btn {
+            background: white;
+            border: 3px solid var(--dark);
+            padding: 15px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            border-radius: 12px;
+            cursor: pointer;
+            box-shadow: 0 4px 0 var(--dark);
+            transition: transform 0.1s;
+        }
+        .choice-btn:active {
+            transform: translateY(3px);
+            box-shadow: 0 1px 0 var(--dark);
+        }
+
+        /* 紙吹雪用Canvas */
+        #particle-canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 999;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <!-- 紙吹雪用Canvas -->
+        <canvas id="particle-canvas"></canvas>
+
+        <!-- 1. 登録画面（重複チェックなしですぐ進む） -->
+        <div id="register-screen" class="screen">
+            <h1>英語単語クイズへようこそ！</h1>
+            <input type="text" id="username-input" placeholder="プレイヤー名を入力" autocomplete="off">
+            <button class="btn" onclick="handleRegister()">操業開始！</button>
+        </div>
+
+        <!-- 2. ゲームプレイ画面 -->
+        <div id="game-screen" class="screen hidden">
+            <div id="game-header">
+                <span id="player-display">こう員さん</span>
+                <span id="score-display">スコア: 0</span>
+            </div>
+
+            <!-- アイテム画像（機種互換対応） -->
+            <img id="item-image" src="" alt="Item Icon" class="item-icon-img">
+            
+            <div id="word-display">Apple</div>
+
+            <div class="choices-grid">
+                <button class="choice-btn" onclick="checkAnswer(0)">選択肢1</button>
+                <button class="choice-btn" onclick="checkAnswer(1)">選択肢2</button>
+                <button class="choice-btn" onclick="checkAnswer(2)">選択肢3</button>
+                <button class="choice-btn" onclick="checkAnswer(3)">選択肢4</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- 軽量Web Audio API 効果音システム ---
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function playSound(type) {
+            initAudio();
+            if (!audioCtx) return;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            const now = audioCtx.currentTime;
+
+            if (type === 'correct') {
+                // ピコン♪（高音2音）
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, now);
+                osc.frequency.setValueAtTime(1760, now + 0.08);
+                gain.gain.setValueAtTime(0.2, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+                osc.start(now);
+                osc.stop(now + 0.25);
+            } else if (type === 'wrong') {
+                // ブー（低音）
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(150, now);
+                osc.frequency.setValueAtTime(100, now + 0.1);
+                gain.gain.setValueAtTime(0.3, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } else if (type === 'levelup') {
+                // ファンファーレ風
+                osc.type = 'triangle';
+                const notes = [523.25, 659.25, 783.99, 1046.50];
+                notes.forEach((freq, i) => {
+                    setTimeout(() => {
+                        if (!audioCtx) return;
+                        const subOsc = audioCtx.createOscillator();
+                        const subGain = audioCtx.createGain();
+                        subOsc.type = 'triangle';
+                        subOsc.frequency.value = freq;
+                        subOsc.connect(subGain);
+                        subGain.connect(audioCtx.destination);
+                        subGain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                        subGain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                        subOsc.start();
+                        subOsc.stop(audioCtx.currentTime + 0.2);
+                    }, i * 100);
+                });
+            }
+        }
+
+        // --- 画面シェイク & ポップ文字演出 ---
+        function triggerEffect(text, isShake) {
+            const container = document.getElementById('game-container');
+            if (isShake) {
+                container.classList.add('shake');
+                setTimeout(() => container.classList.remove('shake'), 400);
+            }
+
+            const pop = document.createElement('div');
+            pop.className = 'pop-text';
+            pop.textContent = text;
+            pop.style.left = `${Math.random() * 40 + 30}%`;
+            pop.style.top = `${Math.random() * 30 + 35}%`;
+            container.appendChild(pop);
+            setTimeout(() => pop.remove(), 800);
+        }
+
+        // --- 紙吹雪（パーティクル）Canvas演出 ---
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let particles = [];
+
+        function resizeCanvas() {
+            canvas.width = canvas.parentElement.clientWidth;
+            canvas.height = canvas.parentElement.clientHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        function launchConfetti() {
+            particles = [];
+            for (let i = 0; i < 40; i++) {
+                particles.push({
+                    x: canvas.width / 2,
+                    y: canvas.height / 2,
+                    vx: (Math.random() - 0.5) * 10,
+                    vy: (Math.random() - 0.7) * 10 - 2,
+                    color: ['#ff4757', '#2ed573', '#1e90ff', '#ffa502', '#ff6b81'][Math.floor(Math.random() * 5)],
+                    size: Math.random() * 8 + 4,
+                    life: 60
+                });
+            }
+            animateConfetti();
+        }
+
+        function animateConfetti() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            particles.forEach((p, index) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.3; // 重力
+                p.life--;
+
+                ctx.fillStyle = p.color;
+                ctx.fillRect(p.x, p.y, p.size, p.size);
+
+                if (p.life <= 0) particles.splice(index, 1);
+            });
+
+            if (particles.length > 0) {
+                requestAnimationFrame(animateConfetti);
+            }
+        }
+
+        // --- ゲームデータ・ロジック ---
+        // サンプル問題データ（実際には300種をここにマッピングまたはGitHub画像パスを指定）
+        const quizData = [
+            { word: "Apple", jp: "リンゴ", img: "images/002_red_apple.png" },
+            { word: "Banana", jp: "バナナ", img: "images/003_banana.png" },
+            { word: "Cat", jp: "ネコ", img: "images/043_cute_cat.png" },
+            { word: "Dog", jp: "イヌ", img: "images/044_cute_dog.png" },
+            { word: "Crown", jp: "王冠", img: "images/004_golden_crown.png" }
+        ];
+
+        let currentIdx = 0;
+        let score = 0;
+        let correctChoiceIdx = 0;
+
+        // 1. 登録処理（重複チェックなしで即時スタート）
+        function handleRegister() {
+            const inputEl = document.getElementById('username-input');
+            const playerName = (inputEl && inputEl.value.trim()) ? inputEl.value.trim() : "こう員さん";
+            
+            localStorage.setItem('playerName', playerName);
+            document.getElementById('player-display').textContent = playerName;
+
+            document.getElementById('register-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+
+            initAudio();
+            loadQuestion();
+        }
+
+        // 2. 問題読み込み
+        function loadQuestion() {
+            const current = quizData[currentIdx % quizData.length];
+            
+            document.getElementById('word-display').textContent = current.word;
+            document.getElementById('item-image').src = current.img;
+
+            // 選択肢の生成
+            const choices = [current.jp];
+            while (choices.length < 4) {
+                const randomItem = quizData[Math.floor(Math.random() * quizData.length)].jp;
+                if (!choices.includes(randomItem)) {
+                    choices.push(randomItem);
+                }
+            }
+            // シャッフル
+            choices.sort(() => Math.random() - 0.5);
+            correctChoiceIdx = choices.indexOf(current.jp);
+
+            const buttons = document.querySelectorAll('.choice-btn');
+            buttons.forEach((btn, idx) => {
+                btn.textContent = choices[idx];
+            });
+        }
+
+        // 3. 答え合わせ
+        function checkAnswer(selectedIdx) {
+            if (selectedIdx === correctChoiceIdx) {
+                score += 10;
+                document.getElementById('score-display').textContent = `スコア: ${score}`;
+                playSound('correct');
+
+                if (score % 30 === 0) {
+                    playSound('levelup');
+                    triggerEffect("LEVEL UP!", true);
+                    launchConfetti();
+                } else {
+                    triggerEffect("GOOD!", false);
+                }
+            } else {
+                playSound('wrong');
+                triggerEffect("MISS!", true);
+            }
+
+            currentIdx++;
+            setTimeout(loadQuestion, 600);
+        }
+    </script>
+</body>
+</html>
