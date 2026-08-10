@@ -7,6 +7,9 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Noto+Sans+JP:wght@400;500;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 
+<!-- Twemoji Library (全端末で同じ絵文字画像を表示するためのCDN) -->
+<script src="https://cdn.jsdelivr.net/npm/@twemoji/api@latest/dist/twemoji.min.js" crossorigin="anonymous"></script>
+
 <style>
 :root{
   --steel-900:#14161b; --steel-800:#1d2027; --steel-700:#2a2e37; --steel-600:#3a3f4a; --steel-500:#565d6b;
@@ -31,6 +34,14 @@ html,body{
 }
 #app{position:relative;z-index:1;width:100%;height:100vh;height:100dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;}
 
+/* Twemoji global style */
+img.emoji {
+  height: 1em;
+  width: 1em;
+  margin: 0 .05em 0 .1em;
+  vertical-align: -0.1em;
+}
+
 /* Screens & Layout */
 .screen{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:12px;}
 .hidden{display:none !important;}
@@ -51,6 +62,30 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   padding:16px; box-shadow:0 10px 20px rgba(0,0,0,0.6); max-width:440px; width:100%; max-height:88vh; display:flex; flex-direction:column;
 }
 .panel-title{font-family:var(--font-b);font-weight:900;font-size:18px;color:var(--paper);text-align:center;margin-bottom:10px;}
+
+/* User Info Styling on Start Screen */
+.user-profile-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  background: rgba(0,0,0,0.25);
+  padding: 6px 12px;
+  border-radius: 20px;
+  border: 1px solid #3a3f4a;
+}
+.user-title-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+}
+.user-name-text {
+  font-size: 13px;
+  color: var(--paper);
+  font-weight: 700;
+}
 
 /* Game HUD & Conveyor */
 #screen-game{padding:8px;justify-content:flex-start;}
@@ -95,21 +130,23 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .item-card.locked{opacity:0.5;}
 .item-card.locked .item-icon{filter:brightness(0) blur(2px);}
 .item-num{font-family:var(--font-m);font-size:9px;color:var(--orange);margin-bottom:2px;}
-.item-icon{font-size:26px;margin-bottom:2px;}
+.item-icon{font-size:28px;margin-bottom:2px;display:flex;justify-content:center;align-items:center;height:36px;}
+.item-icon img{max-width:32px;max-height:32px;object-fit:contain;}
 .item-name{font-size:10px;color:var(--paper);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .item-count{font-size:9px;color:var(--yellow);}
 
 .ranking-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#14161b;border:1px solid #3a3f4a;border-radius:6px;margin-bottom:6px;}
 .rank-num{font-family:var(--font-d);font-size:14px;color:var(--yellow);width:28px;}
-.rank-info{flex:1;text-align:left;}
+.rank-info{flex:1;text-align:left;display:flex;align-items:center;gap:6px;}
 .rank-name{font-size:12px;color:var(--paper);font-weight:700;}
-.rank-title{font-size:9px;color:var(--orange);}
+.rank-title-img{width:20px;height:20px;object-fit:contain;}
 .rank-val{font-family:var(--font-m);font-size:12px;color:var(--green);}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
-.modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:18px;max-width:360px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;}
+.modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:18px;max-width:360px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;align-items:center;}
 input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #464c58;background:#14161b;color:#fff;font-size:14px;margin:10px 0;outline:none;}
+.modal-img{width:64px;height:64px;object-fit:contain;margin-bottom:8px;}
 </style>
 </head>
 <body>
@@ -128,8 +165,14 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <!-- START SCREEN -->
   <div class="screen hidden" id="screen-start">
     <div class="panel-card" style="text-align:center;">
-      <div style="font-family:var(--font-d);color:var(--orange);font-size:28px;margin-bottom:4px;">WORD FACTORY</div>
-      <div style="font-size:11px;color:#aaa;margin-bottom:12px;" id="user-display-info">工員: --- | 称号: [なし]</div>
+      <div style="font-family:var(--font-d);color:var(--orange);font-size:28px;margin-bottom:8px;">WORD FACTORY</div>
+      
+      <!-- User Badge with Title Image -->
+      <div class="user-profile-badge">
+        <img id="user-title-img" class="user-title-img hidden" src="" alt="称号">
+        <div id="user-display-info" class="user-name-text">工員: ---</div>
+      </div>
+
       <div style="font-size:16px;font-family:var(--font-d);color:var(--yellow);margin-bottom:6px;" id="start-wallet">所持金: ¥0</div>
       <div style="font-size:12px;color:#aaa;margin-bottom:16px;" id="start-daily-earned">本日獲得した報奨金: ¥0</div>
       
@@ -211,11 +254,13 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <!-- MODAL -->
   <div class="modal-overlay hidden" id="modal">
     <div class="modal-card">
-      <div style="font-size:36px;" id="modal-icon">❓</div>
+      <div id="modal-icon-wrap">
+        <div style="font-size:36px;" id="modal-icon">❓</div>
+      </div>
       <div style="font-size:15px;font-weight:700;color:var(--paper);margin:4px 0;" id="modal-title">---</div>
       <div style="font-size:11px;color:var(--yellow);margin-bottom:8px;" id="modal-sub">---</div>
       <div style="font-size:11px;color:#bbb;margin-bottom:14px;" id="modal-desc">---</div>
-      <div id="modal-actions" style="display:flex;flex-direction:column;gap:6px;"></div>
+      <div id="modal-actions" style="display:flex;flex-direction:column;gap:6px;width:100%;"></div>
     </div>
   </div>
 
@@ -316,10 +361,39 @@ const WORD_BANK = [
   ["know","知っている",7],["by the way","ところで",7],["for example","例えば",7],["and so on","～など",7],["be interested in","興味がある",7],["come from","出身である",7],["here is","ここに～がある",7],["see you","またね",7],["there is","～が存在する",7],["get up","起きる",7],["a lot of","たくさんの",7],["take care of","世話をする",7],["listen to","聴く",7],["look at","見る",7],["wait for","待つ",7],["thanks to","～のおかげで",7]
 ];
 
+// SVG形式のトランプ称号バッジ画像生成関数
+function createTitleSvg(color1, color2, mark) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <circle cx="50" cy="50" r="45" fill="${color1}" stroke="#2a2010" stroke-width="4"/>
+    <circle cx="50" cy="50" r="36" fill="${color2}" stroke="#fff" stroke-dasharray="4,2" stroke-width="2"/>
+    <text x="50" y="58" font-size="32" text-anchor="middle" dominant-baseline="middle" fill="#fff" font-weight="bold">${mark}</text>
+  </svg>`;
+  return "data:image/svg+xml;utf8," + encodeURIComponent(svg);
+}
+
 const ITEM_BANK = [];
-const titleNames = ['見習い工員','一人前工員','スピードスター','コンボマスター','単語博士','工場長'];
+
+// アイデア2：トランプのシンボル ＋ アニマル
+const titleConfigs = [
+  { name: 'クラウン・ライオン', color1: '#ffc72c', color2: '#c99400', mark: '👑', desc: '堂々とした圧倒的な存在感を放つライオン。' },
+  { name: 'スペード・ウルフ', color1: '#4a5568', color2: '#1a202c', mark: '♠️', desc: '鋭い判断力と研ぎ澄まされた集中力を持つオオカミ。' },
+  { name: 'ハート・キャット', color1: '#ff4757', color2: '#b32230', mark: '♥️', desc: 'しなやかで柔軟、マイペースに舞うキャット。' },
+  { name: 'ダイヤ・フォックス', color1: '#ff6a3d', color2: '#c0392b', mark: '♦️', desc: '賢くスピーディーな立ち回りが得意なキツネ。' },
+  { name: 'クラブ・ベア', color1: '#3ddc84', color2: '#1b8a4f', mark: '♣️', desc: 'ぶれない着実さと力強さを兼ね備えたクマ。' },
+  { name: 'ジョーカー・ラビット', color1: '#a855f7', color2: '#6b21a8', mark: '🃏', desc: 'トリッキーで軽快に飛び跳ねるウサギ。' }
+];
+
 for(let i=1; i<=6; i++){
-  ITEM_BANK.push({ id: 'title_'+i, num: i, name: titleNames[i-1], type: 'title', icon: '🏅', desc: 'プロファイルに装着できる特別な称号。' });
+  const cfg = titleConfigs[i-1];
+  ITEM_BANK.push({ 
+    id: 'title_'+i, 
+    num: i, 
+    name: cfg.name, 
+    type: 'title', 
+    icon: cfg.mark,
+    img: createTitleSvg(cfg.color1, cfg.color2, cfg.mark),
+    desc: cfg.desc 
+  });
 }
 
 const friendlyItems = [
@@ -483,7 +557,7 @@ async function checkIncomingPresents(){
 }
 
 /* =================================================================
-   6. UI CONTROLLER
+   6. UI CONTROLLER & TWEMOJI RENDERER
 ================================================================= */
 const screens = {
   reg: document.getElementById('screen-reg'),
@@ -500,19 +574,41 @@ function showScreen(name){
   updateUI();
 }
 
+// 画面内の絵文字を全端末共通のSVG画像に一括変換する関数
+function applyTwemoji(element) {
+  if (typeof twemoji !== 'undefined') {
+    twemoji.parse(element || document.body, {
+      folder: 'svg',
+      ext: '.svg'
+    });
+  }
+}
+
 function updateUI(){
   if(!currentUser) return;
   const titleObj = ITEM_BANK.find(i => i.id === currentUser.equippedTitle);
   const walletStr = `所持金: ¥${(currentUser.wallet || 0).toLocaleString()}`;
   
-  document.getElementById('user-display-info').textContent = `工員: ${currentUser.name} | 称号: [${titleObj ? titleObj.name : 'なし'}]`;
+  document.getElementById('user-display-info').textContent = `工員: ${currentUser.name}`;
+  const titleImgElem = document.getElementById('user-title-img');
+  
+  if (titleObj && titleObj.img) {
+    titleImgElem.src = titleObj.img;
+    titleImgElem.title = titleObj.name;
+    titleImgElem.classList.remove('hidden');
+  } else {
+    titleImgElem.classList.add('hidden');
+  }
+
   document.getElementById('start-wallet').textContent = walletStr;
   document.getElementById('shop-wallet').textContent = walletStr;
   document.getElementById('start-daily-earned').textContent = `本日獲得した報奨金: ¥${(currentUser.dailyMoney || 0).toLocaleString()}`;
+
+  applyTwemoji();
 }
 
 /* =================================================================
-   7. GAME LOGIC & TIMER & SPEED BONUS (Per Question Bonus)
+   7. GAME LOGIC & TIMER
 ================================================================= */
 let game = {
   round: 0, money: 0, totalSpeedBonus: 0, combo: 0, level: 1, currentWord: null,
@@ -520,7 +616,7 @@ let game = {
   questionStartTime: 0, timerInterval: null, timeLeft: 15
 };
 
-const QUESTION_TIMEOUT_SEC = 15; // 1問あたりの制限時間(秒)
+const QUESTION_TIMEOUT_SEC = 15;
 
 function startQuizGame(){
   game.round = 0; 
@@ -648,6 +744,7 @@ function nextRound(){
   requestAnimationFrame(() => {
     spawnTiles(wData[0]);
     startTimer();
+    applyTwemoji();
   });
 }
 
@@ -753,9 +850,15 @@ function updateColUI(){
 
       const card = document.createElement('div');
       card.className = 'item-card ' + (isOwned ? '' : 'locked');
+
+      let iconHtml = item.icon;
+      if (item.type === 'title' && item.img) {
+        iconHtml = `<img src="${item.img}" alt="${item.name}">`;
+      }
+
       card.innerHTML = `
         <div class="item-num">${numFormatted}</div>
-        <div class="item-icon">${item.icon}</div>
+        <div class="item-icon">${iconHtml}</div>
         <div class="item-name">${isOwned ? item.name : '？？？？'}</div>
         <div class="item-count">${isOwned ? '所持:'+uItem.count : '未所持'}</div>
       `;
@@ -776,22 +879,30 @@ function updateColUI(){
       card.className = 'item-card ' + (isLearned ? '' : 'locked');
       card.innerHTML = `
         <div class="item-num">${numFormatted}</div>
-        <div class="item-icon">${isLearned ? '🔤' : '❓'}</div>
+        <div class="item-icon">🔤</div>
         <div class="item-name">${isLearned ? word : '？？？'}</div>
         <div class="item-count">${profLabel}</div>
       `;
       grid.appendChild(card);
     });
   }
+
+  applyTwemoji(grid);
 }
 
 function openItemModal(item, uItem){
   const isOwned = uItem.count > 0;
   const numFormatted = 'No.' + String(item.num).padStart(3, '0');
+  const iconWrap = document.getElementById('modal-icon-wrap');
   
-  document.getElementById('modal-icon').textContent = isOwned ? item.icon : '❓';
+  if (item.type === 'title' && item.img) {
+    iconWrap.innerHTML = `<img class="modal-img" src="${item.img}" alt="${item.name}">`;
+  } else {
+    iconWrap.innerHTML = `<div style="font-size:36px;" id="modal-icon">${isOwned ? item.icon : '❓'}</div>`;
+  }
+
   document.getElementById('modal-title').textContent = isOwned ? `${numFormatted} ${item.name}` : `${numFormatted} ？？？？`;
-  document.getElementById('modal-sub').textContent = item.type === 'title' ? '【称号】' : '【コレクションアイテム】';
+  document.getElementById('modal-sub').textContent = item.type === 'title' ? '【称号バッジ】' : '【コレクションアイテム】';
   document.getElementById('modal-desc').textContent = isOwned ? item.desc : 'ガチャやランキング報酬で獲得できます。';
 
   const actions = document.getElementById('modal-actions');
@@ -827,6 +938,7 @@ function openItemModal(item, uItem){
   actions.appendChild(btnClose);
 
   document.getElementById('modal').classList.remove('hidden');
+  applyTwemoji(document.getElementById('modal'));
 }
 
 function closeModal(){ 
@@ -899,11 +1011,17 @@ function renderRankingList(data){
     const tObj = ITEM_BANK.find(i => i.id === u.equippedTitle);
     const item = document.createElement('div');
     item.className = 'ranking-item';
+
+    let titleImgHtml = '';
+    if (tObj && tObj.img) {
+      titleImgHtml = `<img src="${tObj.img}" class="rank-title-img" alt="${tObj.name}">`;
+    }
+
     item.innerHTML = `
       <div class="rank-num">#${idx+1}</div>
       <div class="rank-info">
+        ${titleImgHtml}
         <div class="rank-name">${u.name}</div>
-        <div class="rank-title">[${tObj ? tObj.name : 'なし'}]</div>
       </div>
       <div class="rank-val">¥${(u.dailyMoney||0).toLocaleString()}</div>
     `;
@@ -914,14 +1032,22 @@ function renderRankingList(data){
     }
     listEl.appendChild(item);
   });
+
+  applyTwemoji(listEl);
 }
 
 function openPlayerActionModal(targetUserData) {
   const tObj = ITEM_BANK.find(i => i.id === targetUserData.equippedTitle);
+  const iconWrap = document.getElementById('modal-icon-wrap');
   
-  document.getElementById('modal-icon').textContent = '👤';
+  if (tObj && tObj.img) {
+    iconWrap.innerHTML = `<img class="modal-img" src="${tObj.img}" alt="${tObj.name}">`;
+  } else {
+    iconWrap.innerHTML = `<div style="font-size:36px;" id="modal-icon">👤</div>`;
+  }
+
   document.getElementById('modal-title').textContent = targetUserData.name;
-  document.getElementById('modal-sub').textContent = `称号: [${tObj ? tObj.name : 'なし'}]`;
+  document.getElementById('modal-sub').textContent = `称号: ${tObj ? tObj.name : 'なし'}`;
   document.getElementById('modal-desc').textContent = '行う操作を選択してください。';
 
   const actions = document.getElementById('modal-actions');
@@ -954,6 +1080,7 @@ function openPlayerActionModal(targetUserData) {
   actions.appendChild(btnClose);
 
   document.getElementById('modal').classList.remove('hidden');
+  applyTwemoji(document.getElementById('modal'));
 }
 
 async function promptGiftItem(targetName){
@@ -1047,7 +1174,10 @@ document.getElementById('btn-rank-back').onclick = () => showScreen('start');
 const savedName = localStorage.getItem('wf_username');
 if(savedName){
   loadUserData(savedName)
-    .then(() => showScreen('start'))
+    .then(() => {
+      showScreen('start');
+      applyTwemoji();
+    })
     .catch((e) => {
       console.error("ログインエラー:", e);
       showScreen('reg');
