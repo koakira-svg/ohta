@@ -562,7 +562,10 @@ async function checkTopRankReward(prevMoney, prevDateStr) {
     const snap = await getDocs(q);
     if (!snap.empty) {
       const topUser = snap.docs[0].data();
-      if (topUser.name === currentUser.name) {
+      const topMoney = topUser.dailyMoney || 0;
+      
+      // 1位の金額が0より大きく、かつ自分の前日の報奨金が最上位の金額と等しい場合（1位タイ含む）のみ付与
+      if (topMoney > 0 && prevMoney === topMoney) {
         // 1. ランダム天体称号の獲得
         const randomTitle = TITLE_BANK[Math.floor(Math.random() * TITLE_BANK.length)];
         if (!currentUser.items) currentUser.items = {};
@@ -571,7 +574,7 @@ async function checkTopRankReward(prevMoney, prevDateStr) {
         }
         currentUser.items[randomTitle.id].count = (currentUser.items[randomTitle.id].count || 0) + 1;
         
-        // 2. 日付入り限定称号の獲得（例: 2026年8月10日 1位）
+        // 2. 日付入り限定称号の獲得
         if (!currentUser.dailyTitles) currentUser.dailyTitles = [];
         const formattedDateStr = formatJSTDateLabel(prevDateStr);
         const newDailyTitleName = `${formattedDateStr} 1位`;
@@ -979,7 +982,7 @@ function updateColUI(){
     if (userDailyTitles.length === 0) {
       dailyTitleGrid.innerHTML = '<div style="font-size:10px;color:#aaa;grid-column:span 3;text-align:center;padding:6px;">デイリー1位称号はありません</div>';
     } else {
-      userDailyTitles.forEach((titleText, idx) => {
+      userDailyTitles.forEach((titleText) => {
         const card = document.createElement('div');
         card.className = 'item-card daily-first-card';
         card.innerHTML = `
