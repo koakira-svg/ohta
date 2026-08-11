@@ -152,11 +152,12 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   border-left: 2px solid var(--orange);
   text-align: left !important;
   width: 100%;
+  word-break: break-all;
+  overflow-wrap: anywhere;
 }
 .board-msg-author {
   color: var(--orange);
   font-weight: 700;
-  margin-right: 4px;
 }
 
 /* Game HUD */
@@ -241,7 +242,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
 .modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:16px;max-width:380px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;align-items:center;}
-input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px solid #464c58;background:#14161b;color:#fff;font-size:13px;margin:6px 0;outline:none;font-family:var(--font-b);resize:none;}
+input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px solid #464c58;background:#14161b;color:#fff;font-size:13px;margin:6px 0;outline:none;font-family:var(--font-b);resize:none;text-align:left;}
 </style>
 </head>
 <body>
@@ -290,7 +291,7 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
           <button class="btn purple" style="padding:2px 8px; font-size:10px; width:auto;" id="btn-open-board-modal">投稿する</button>
         </div>
         <div class="board-messages" id="board-messages-list">
-          <div style="color:#777; font-size:10px; text-align:center; padding:10px;">読み込み中...</div>
+          <div style="color:#777; font-size:10px; text-align:left; padding:10px;">読み込み中...</div>
         </div>
       </div>
       
@@ -746,7 +747,7 @@ async function loadBoardMessages() {
     const q = query(collection(db, "board"), orderBy("date", "desc"), limit(15));
     const snap = await getDocs(q);
     if (snap.empty) {
-      container.innerHTML = '<div style="color:#777; font-size:10px; text-align:center; padding:10px;">まだ投稿はありません</div>';
+      container.innerHTML = '<div style="color:#777; font-size:10px; text-align:left; padding:10px;">まだ投稿はありません</div>';
       return;
     }
     container.innerHTML = '';
@@ -754,13 +755,16 @@ async function loadBoardMessages() {
       const data = docSnap.data();
       const div = document.createElement('div');
       div.className = 'board-msg-item';
-      div.innerHTML = `<span class="board-msg-author">${data.author}:</span>${escapeHtml(data.message)}`;
+      div.innerHTML = `
+        <div class="board-msg-author" style="margin-bottom:2px;">${escapeHtml(data.author)}:</div>
+        <div style="padding-left: 2px;">${escapeHtml(data.message)}</div>
+      `;
       container.appendChild(div);
     });
     applyTwemoji(container);
   } catch(e) {
     console.error("掲示板読み込みエラー:", e);
-    container.innerHTML = '<div style="color:var(--red); font-size:10px; text-align:center; padding:10px;">読み込みエラー</div>';
+    container.innerHTML = '<div style="color:var(--red); font-size:10px; text-align:left; padding:10px;">読み込みエラー</div>';
   }
 }
 
@@ -776,7 +780,7 @@ function openBoardModal() {
   
   const descEl = document.getElementById('modal-desc');
   descEl.innerHTML = `
-    <div style="font-size:10px;color:#aaa;margin-bottom:4px;">全工員に見えるメッセージを残せます（50文字以内）</div>
+    <div style="font-size:10px;color:#aaa;margin-bottom:4px;text-align:left;">全工員に見えるメッセージを残せます（50文字以内）</div>
     <textarea id="board-msg-input" placeholder="メッセージを入力..." maxlength="50" rows="2"></textarea>
   `;
 
@@ -1305,7 +1309,7 @@ function openRenameModal() {
   
   const descEl = document.getElementById('modal-desc');
   descEl.innerHTML = `
-    <div style="font-size:10px;color:#aaa;margin-bottom:4px;">新しい工員名を入力してください（10文字以内）</div>
+    <div style="font-size:10px;color:#aaa;margin-bottom:4px;text-align:left;">新しい工員名を入力してください（10文字以内）</div>
     <input type="text" id="rename-input" placeholder="新しい名前" maxlength="10" value="${currentUser.name}">
   `;
 
