@@ -134,7 +134,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   font-weight: 700;
 }
 .board-messages {
-  max-height: 75px;
+  max-height: 150px; /* ここを75pxから2倍の150pxに変更しました */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -1453,19 +1453,16 @@ async function loadRanking(){
     const todayJST = getJSTDateStr();
     
     const data = [];
-    // ランキング取得時に各ユーザーの日付をチェックし、日付が変わっていればその場でdailyMoneyを0にリセットして反映
     for (const docSnap of snap.docs) {
       let uData = docSnap.data();
       if (uData.lastActiveDate !== todayJST && (uData.dailyMoney || 0) > 0) {
         uData.dailyMoney = 0;
         uData.lastActiveDate = todayJST;
-        // データベース側も更新しておく
         await updateDoc(docSnap.ref, { dailyMoney: 0, lastActiveDate: todayJST });
       }
       data.push(uData);
     }
 
-    // 再度dailyMoneyの降順で確実に並び替え
     data.sort((a, b) => (b.dailyMoney || 0) - (a.dailyMoney || 0));
 
     rankingCache = { data: data, time: Date.now() };
