@@ -113,7 +113,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   color: var(--yellow);
 }
 
-/* 掲示板パーツ (コンパクト) */
+/* 掲示板パーツ (コンパクト) - 左づめ対応 */
 .board-container {
   background: #14161b;
   border: 2px solid #3a3f4a;
@@ -139,6 +139,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   flex-direction: column;
   gap: 4px;
   padding-right: 2px;
+  text-align: left;
 }
 .board-msg-item {
   background: #1d2027;
@@ -147,6 +148,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   font-size: 10px;
   color: var(--paper);
   border-left: 2px solid var(--orange);
+  text-align: left;
 }
 .board-msg-author {
   color: var(--orange);
