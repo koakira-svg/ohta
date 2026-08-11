@@ -1007,6 +1007,7 @@ async function nextRound(){
 
     alert(`🎉 操業終了！\n\n・問題獲得報酬: ¥${(game.money - game.totalSpeedBonus).toLocaleString()}\n・タイムボーナス合計: ¥${game.totalSpeedBonus.toLocaleString()}\n---------------------\n合計獲得金額：¥${totalEarned.toLocaleString()}${rankUpMsg}`);
 
+    // 【改善箇所】日付を確実にチェック・同期した上でウォレットとデイリーマネーを加算
     const todayJST = getJSTDateStr();
     if (currentUser.lastActiveDate !== todayJST) {
       currentUser.dailyMoney = 0;
@@ -1447,28 +1448,17 @@ async function loadRanking(){
   const listEl = document.getElementById('rank-list');
   listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:10px;">読み込み中...</div>';
 
+  const now = Date.now();
+  if(rankingCache.data && (now - rankingCache.time < 180000)){
+    renderRankingList(rankingCache.data);
+    return;
+  }
+
   try {
     const q = query(collection(db, "users"), orderBy("dailyMoney", "desc"));
     const snap = await getDocs(q);
-    const todayJST = getJSTDateStr();
-    
-    const data = [];
-    // ランキング取得時に各ユーザーの日付をチェックし、日付が変わっていればその場でdailyMoneyを0にリセットして反映
-    for (const docSnap of snap.docs) {
-      let uData = docSnap.data();
-      if (uData.lastActiveDate !== todayJST && (uData.dailyMoney || 0) > 0) {
-        uData.dailyMoney = 0;
-        uData.lastActiveDate = todayJST;
-        // データベース側も更新しておく
-        await updateDoc(docSnap.ref, { dailyMoney: 0, lastActiveDate: todayJST });
-      }
-      data.push(uData);
-    }
-
-    // 再度dailyMoneyの降順で確実に並び替え
-    data.sort((a, b) => (b.dailyMoney || 0) - (a.dailyMoney || 0));
-
-    rankingCache = { data: data, time: Date.now() };
+    const data = snap.docs.map(d => d.data());
+    rankingCache = { data: data, time: now };
     renderRankingList(data);
   } catch(e) {
     console.error("ランキング取得エラー:", e);
