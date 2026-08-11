@@ -990,7 +990,7 @@ function selectNextWord(){
   return pool[0];
 }
 
-async function nextRound(){
+function nextRound(){
   stopTimer();
 
   if(game.round >= 10){
@@ -1007,16 +1007,9 @@ async function nextRound(){
 
     alert(`🎉 操業終了！\n\n・問題獲得報酬: ¥${(game.money - game.totalSpeedBonus).toLocaleString()}\n・タイムボーナス合計: ¥${game.totalSpeedBonus.toLocaleString()}\n---------------------\n合計獲得金額：¥${totalEarned.toLocaleString()}${rankUpMsg}`);
 
-    // 【改善箇所】日付を確実にチェック・同期した上でウォレットとデイリーマネーを加算
-    const todayJST = getJSTDateStr();
-    if (currentUser.lastActiveDate !== todayJST) {
-      currentUser.dailyMoney = 0;
-      currentUser.lastActiveDate = todayJST;
-    }
-
     currentUser.wallet = (currentUser.wallet || 0) + totalEarned;
     currentUser.dailyMoney = (currentUser.dailyMoney || 0) + totalEarned;
-    await saveUserData();
+    saveUserData();
     showScreen('start');
     return;
   }
@@ -1487,6 +1480,7 @@ function renderRankingList(data){
     const item = document.createElement('div');
     item.className = 'ranking-item';
 
+    // 日付が変わっていてまだ当日のデータにリセット・同期されていない場合は表示上も0円として扱う
     const displayDailyMoney = (u.lastActiveDate === todayJST) ? (u.dailyMoney || 0) : 0;
 
     item.innerHTML = `
