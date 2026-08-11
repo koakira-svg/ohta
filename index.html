@@ -629,7 +629,7 @@ async function checkTopRankReward(prevMoney, prevDateStr) {
       const topUser = snap.docs[0].data();
       const topMoney = topUser.dailyMoney || 0;
       
-      if (topMoney > 0 && prevMoney === topMoney) {
+      if (topMoney > 0 && prevMoney === topMoney && topUser.name === currentUser.name) {
         const randomTitle = TITLE_BANK[Math.floor(Math.random() * TITLE_BANK.length)];
         if (!currentUser.items) currentUser.items = {};
         if (!currentUser.items[randomTitle.id] || typeof currentUser.items[randomTitle.id] !== 'object') {
@@ -1101,7 +1101,7 @@ function onTileClick(tileElem, char){
     if(game.missCount >= 3){
       stopTimer();
       setTimeout(() => {
-        alert(`❌ 3回間違えました！正解は「${game.currentWord[0]}」でした。次の問題へ進みます。`);
+        alert(`❌ 3回間違えました！正解はコピー「${game.currentWord[0]}」でした。次の問題へ進みます。`);
         onWordComplete(false);
       }, 200);
     }
@@ -1480,13 +1480,16 @@ function renderRankingList(data){
     const item = document.createElement('div');
     item.className = 'ranking-item';
 
+    // 日付が変わっていてまだ当日のデータにリセット・同期されていない場合は表示上も0円として扱う
+    const displayDailyMoney = (u.lastActiveDate === todayJST) ? (u.dailyMoney || 0) : 0;
+
     item.innerHTML = `
       <div class="rank-num">#${idx+1}</div>
       <div class="rank-info">
         <div class="rank-name">${u.name}</div>
         <div style="font-size:9px;color:var(--yellow);">${uRank.icon} ${uRank.name}</div>
       </div>
-      <div class="rank-val">¥${(u.dailyMoney||0).toLocaleString()}</div>
+      <div class="rank-val">¥${displayDailyMoney.toLocaleString()}</div>
     `;
 
     if(u.name !== currentUser.name){
