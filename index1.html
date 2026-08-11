@@ -113,7 +113,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   color: var(--yellow);
 }
 
-/* 掲示板パーツ (コンパクト) - 左づめ対応 */
+/* 掲示板パーツ (コンパクト) - 左づめ強制対応 */
 .board-container {
   background: #14161b;
   border: 2px solid #3a3f4a;
@@ -123,6 +123,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   display: flex;
   flex-direction: column;
   gap: 4px;
+  text-align: left;
 }
 .board-header {
   display: flex;
@@ -139,7 +140,8 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   flex-direction: column;
   gap: 4px;
   padding-right: 2px;
-  text-align: left;
+  text-align: left !important;
+  align-items: flex-start;
 }
 .board-msg-item {
   background: #1d2027;
@@ -148,7 +150,8 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   font-size: 10px;
   color: var(--paper);
   border-left: 2px solid var(--orange);
-  text-align: left;
+  text-align: left !important;
+  width: 100%;
 }
 .board-msg-author {
   color: var(--orange);
@@ -280,7 +283,7 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
         <button class="btn secondary" id="btn-open-rank" style="grid-column:span 2; padding:8px;">🏆 ランキング</button>
       </div>
 
-      <!-- ランキングの下に配置されたコンパクト掲示板（金額表示なし） -->
+      <!-- ランキングの下に配置されたコンパクト掲示板 -->
       <div class="board-container">
         <div class="board-header">
           <span>💬 工場掲示板</span>
