@@ -43,36 +43,37 @@ img.emoji {
 }
 
 /* Screens & Layout */
-.screen{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:12px;}
+.screen{width:100%;height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;padding:8px;}
 .hidden{display:none !important;}
 button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .btn{
   font-family:var(--font-d); color:#1c1c1c; background:linear-gradient(180deg, var(--yellow), var(--yellow-dark));
-  padding:12px 24px; border-radius:10px; font-size:15px; letter-spacing:1px;
-  box-shadow:0 4px 0 #8a6a00, 0 6px 12px rgba(0,0,0,0.4); border:2px solid #2a2010; transition:transform .08s ease;
+  padding:10px 16px; border-radius:8px; font-size:14px; letter-spacing:1px;
+  box-shadow:0 3px 0 #8a6a00, 0 5px 10px rgba(0,0,0,0.4); border:2px solid #2a2010; transition:transform .08s ease;
   width: 100%;
 }
-.btn:active{transform:translateY(3px);box-shadow:0 1px 0 #8a6a00;}
+.btn:active{transform:translateY(2px);box-shadow:0 1px 0 #8a6a00;}
 .btn:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none;}
-.btn.secondary{background:linear-gradient(180deg, #6d7684, #3a3f4a); color:#f4ecd8; box-shadow:0 4px 0 #1c1e23; border-color:#1c1e23;}
-.btn.purple{background:linear-gradient(180deg, #c084fc, #7e22ce); color:#fff; box-shadow:0 4px 0 #581c87; border-color:#3b0764;}
+.btn.secondary{background:linear-gradient(180deg, #6d7684, #3a3f4a); color:#f4ecd8; box-shadow:0 3px 0 #1c1e23; border-color:#1c1e23;}
+.btn.purple{background:linear-gradient(180deg, #c084fc, #7e22ce); color:#fff; box-shadow:0 3px 0 #581c87; border-color:#3b0764;}
 
 .panel-card{
-  background:linear-gradient(180deg,#2a2e37,#1d2027); border:3px solid #464c58; border-radius:16px;
-  padding:16px; box-shadow:0 10px 20px rgba(0,0,0,0.6); max-width:440px; width:100%; max-height:88vh; display:flex; flex-direction:column;
+  background:linear-gradient(180deg,#2a2e37,#1d2027); border:3px solid #464c58; border-radius:14px;
+  padding:12px 16px; box-shadow:0 10px 20px rgba(0,0,0,0.6); max-width:440px; width:100%; max-height:96vh; display:flex; flex-direction:column;
+  overflow-y: auto;
 }
-.panel-title{font-family:var(--font-b);font-weight:900;font-size:18px;color:var(--paper);text-align:center;margin-bottom:10px;}
+.panel-title{font-family:var(--font-b);font-weight:900;font-size:16px;color:var(--paper);text-align:center;margin-bottom:6px;}
 
 .user-profile-badge {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 4px;
-  margin-bottom: 12px;
+  gap: 2px;
+  margin-bottom: 8px;
   background: rgba(0,0,0,0.25);
-  padding: 8px 14px;
-  border-radius: 12px;
+  padding: 6px 10px;
+  border-radius: 10px;
   border: 1px solid #3a3f4a;
   position: relative;
 }
@@ -82,14 +83,14 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   gap: 6px;
 }
 .user-name-text {
-  font-size: 14px;
+  font-size: 13px;
   color: var(--paper);
   font-weight: 700;
 }
 .btn-edit-name {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 13px;
   cursor: pointer;
   padding: 2px;
   line-height: 1;
@@ -98,13 +99,65 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   display: inline-flex;
   align-items: center;
   gap: 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 700;
   color: #1c1c1c;
   background: var(--yellow);
-  padding: 3px 8px;
-  border-radius: 12px;
+  padding: 2px 6px;
+  border-radius: 10px;
   border: 1px solid #8a6a00;
+}
+.daily-title-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--yellow);
+}
+
+/* 掲示板パーツ (コンパクト) - 左づめ強制対応 */
+.board-container {
+  background: #14161b;
+  border: 2px solid #3a3f4a;
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+}
+.board-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  color: var(--yellow);
+  font-weight: 700;
+}
+.board-messages {
+  max-height: 75px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding-right: 2px;
+  text-align: left !important;
+  align-items: flex-start;
+}
+.board-msg-item {
+  background: #1d2027;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  color: var(--paper);
+  border-left: 2px solid var(--orange);
+  text-align: left !important;
+  width: 100%;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+.board-msg-author {
+  color: var(--orange);
+  font-weight: 700;
 }
 
 /* Game HUD */
@@ -116,7 +169,6 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 
 .timer-wrap{width:100%;max-width:440px;height:8px;background:#14161b;border:1px solid #464c58;border-radius:4px;margin-top:6px;overflow:hidden;position:relative;}
 .timer-bar{height:100%;width:100%;background:linear-gradient(90deg, var(--green), var(--yellow), var(--red));transition:width 0.1s linear;}
-
 .timer-bar.alert {
   background: var(--red) !important;
   animation: timerBlink 0.3s infinite alternate;
@@ -126,10 +178,8 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   to { opacity: 0.4; box-shadow: none; }
 }
 
-.order-slip{margin:6px 0 4px;background:var(--paper);border-radius:8px;padding:10px 16px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;position:relative;}
-.order-slip.alert-shake {
-  animation: alertShake 0.15s infinite;
-}
+.order-slip{margin:6px 0 4px;background:var(--paper);border-radius:8px;padding:8px 14px;transform:rotate(-1deg);box-shadow:0 4px 8px rgba(0,0,0,0.4);text-align:center;width:100%;max-width:440px;position:relative;}
+.order-slip.alert-shake { animation: alertShake 0.15s infinite; }
 @keyframes alertShake {
   0% { transform: rotate(-1deg) translate(0, 0); }
   25% { transform: rotate(-1.5deg) translate(-1px, 1px); }
@@ -137,62 +187,62 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   100% { transform: rotate(-1deg) translate(0, 0); }
 }
 
-.order-jp{font-size:22px;font-weight:900;color:#2a2010;}
+.order-jp{font-size:20px;font-weight:900;color:#2a2010;}
 .order-stats{font-size:10px;color:#7a6b52;margin-top:2px;}
-.btn-speech{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:20px;cursor:pointer;}
+.btn-speech{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;font-size:18px;cursor:pointer;}
 
-.slots{display:flex;justify-content:center;align-items:center;gap:4px;padding:6px 0;min-height:56px;width:100%;flex-wrap:wrap;}
-.slot{width:34px;height:44px;border:2px dashed #565d6b;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:20px;color:var(--paper);background:rgba(0,0,0,0.2);}
+.slots{display:flex;justify-content:center;align-items:center;gap:4px;padding:4px 0;min-height:48px;width:100%;flex-wrap:wrap;}
+.slot{width:32px;height:40px;border:2px dashed #565d6b;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:var(--font-d);font-size:18px;color:var(--paper);background:rgba(0,0,0,0.2);}
 .slot.filled{border-style:solid;border-color:var(--green);background:#2a3530;}
 
-.belt-wrap{position:relative;width:100%;max-width:440px;flex:1;margin-top:6px;border-radius:12px;overflow:hidden;border:3px solid #464c58;background:#1a1c21;min-height:200px;display:flex;align-items:center;justify-content:center;padding:12px;}
+.belt-wrap{position:relative;width:100%;max-width:440px;flex:1;margin-top:4px;border-radius:10px;overflow:hidden;border:3px solid #464c58;background:#1a1c21;min-height:180px;display:flex;align-items:center;justify-content:center;padding:10px;}
 .belt-track{position:absolute;inset:0;background:repeating-linear-gradient(115deg, #34383f 0 20px, #131417 20px 40px);background-size:200% 100%;animation:beltmove 1.5s linear infinite;}
 @keyframes beltmove{from{background-position:0 0;}to{background-position:-56.5px 0;}}
 
-.tile-container{position:relative;z-index:2;width:100%;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:10px;max-height:100%;overflow-y:auto;}
+.tile-container{position:relative;z-index:2;width:100%;display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:8px;max-height:100%;overflow-y:auto;}
 .tile{
-  width:60px; height:70px; background:linear-gradient(180deg,#e8dcc0,#c9b98d);
+  width:54px; height:64px; background:linear-gradient(180deg,#e8dcc0,#c9b98d);
   border:3px solid #5a4a2a; border-radius:8px; display:flex; align-items:center; justify-content:center;
-  font-family:var(--font-d); font-size:32px; color:#2a2010; cursor:pointer; box-shadow:0 4px 8px rgba(0,0,0,0.4);
+  font-family:var(--font-d); font-size:28px; color:#2a2010; cursor:pointer; box-shadow:0 3px 6px rgba(0,0,0,0.4);
   transition:transform 0.1s; flex-shrink:0;
 }
 .tile:active{transform:scale(0.92);}
 
 /* Collection & Lists */
-.tab-row{display:flex;gap:6px;margin-bottom:10px;}
-.tab-btn{flex:1;padding:8px;background:#3a3f4a;color:#aaa;border-radius:6px;font-size:11px;text-align:center;border:none;cursor:pointer;}
+.tab-row{display:flex;gap:6px;margin-bottom:8px;}
+.tab-btn{flex:1;padding:6px;background:#3a3f4a;color:#aaa;border-radius:6px;font-size:11px;text-align:center;border:none;cursor:pointer;}
 .tab-btn.active{background:var(--yellow);color:#1c1c1c;font-weight:700;}
 
 .section-label {
   font-size: 11px;
   font-weight: 700;
   color: var(--yellow);
-  margin: 6px 0 4px 0;
+  margin: 4px 0;
   text-align: left;
   width: 100%;
 }
 
-.grid-container{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(3, 1fr);gap:8px;padding:4px;width:100%;}
-.item-card{background:#14161b;border:2px solid #3a3f4a;border-radius:8px;padding:8px;text-align:center;position:relative;cursor:pointer;}
+.grid-container{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;padding:4px;width:100%;}
+.item-card{background:#14161b;border:2px solid #3a3f4a;border-radius:8px;padding:6px;text-align:center;position:relative;cursor:pointer;}
 .item-card.locked{opacity:0.5;}
 .item-card.locked .item-icon{filter:brightness(0) blur(2px);}
 .item-card.title-card{border-color:var(--purple); background:linear-gradient(180deg, #2e1065, #14161b);}
 .item-card.daily-first-card{border-color:var(--yellow); background:linear-gradient(180deg, #584100, #14161b);}
 .item-num{font-family:var(--font-m);font-size:9px;color:var(--orange);margin-bottom:2px;}
-.item-icon{font-size:28px;margin-bottom:2px;display:flex;justify-content:center;align-items:center;height:36px;}
+.item-icon{font-size:24px;margin-bottom:2px;display:flex;justify-content:center;align-items:center;height:32px;}
 .item-name{font-size:10px;color:var(--paper);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .item-count{font-size:9px;color:var(--yellow);}
 
-.ranking-item{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:#14161b;border:1px solid #3a3f4a;border-radius:6px;margin-bottom:6px;}
-.rank-num{font-family:var(--font-d);font-size:14px;color:var(--yellow);width:28px;}
-.rank-info{flex:1;text-align:left;display:flex;flex-direction:column;gap:2px;}
-.rank-name{font-size:12px;color:var(--paper);font-weight:700;}
-.rank-val{font-family:var(--font-m);font-size:12px;color:var(--green);text-align:right;}
+.ranking-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#14161b;border:1px solid #3a3f4a;border-radius:6px;margin-bottom:4px;}
+.rank-num{font-family:var(--font-d);font-size:13px;color:var(--yellow);width:24px;}
+.rank-info{flex:1;text-align:left;display:flex;flex-direction:column;gap:1px;}
+.rank-name{font-size:11px;color:var(--paper);font-weight:700;}
+.rank-val{font-family:var(--font-m);font-size:11px;color:var(--green);text-align:right;}
 
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
-.modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:18px;max-width:380px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;align-items:center;}
-input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #464c58;background:#14161b;color:#fff;font-size:14px;margin:10px 0;outline:none;}
+.modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:16px;max-width:380px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;align-items:center;}
+input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px solid #464c58;background:#14161b;color:#fff;font-size:13px;margin:6px 0;outline:none;font-family:var(--font-b);resize:none;text-align:left;}
 </style>
 </head>
 <body>
@@ -211,7 +261,7 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <!-- START SCREEN -->
   <div class="screen hidden" id="screen-start">
     <div class="panel-card" style="text-align:center;">
-      <div style="font-family:var(--font-d);color:var(--orange);font-size:28px;margin-bottom:8px;">WORD FACTORY</div>
+      <div style="font-family:var(--font-d);color:var(--orange);font-size:22px;margin-bottom:4px;">WORD FACTORY</div>
       
       <div class="user-profile-badge">
         <div class="user-name-wrap">
@@ -219,17 +269,32 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
           <button class="btn-edit-name" id="btn-open-rename-modal" title="名前を変更する">✏️</button>
         </div>
         <div id="user-rank-badge" class="rank-badge">🌱 見習い工員</div>
+        <div id="user-daily-count" class="daily-title-badge">🥇 デイリー1位獲得: 0回</div>
       </div>
 
-      <div style="font-size:16px;font-family:var(--font-d);color:var(--yellow);margin-bottom:6px;" id="start-wallet">所持金: ¥0</div>
-      <div style="font-size:12px;color:#aaa;margin-bottom:16px;" id="start-daily-earned">本日獲得した報奨金: ¥0</div>
-      
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-        <button class="btn" id="btn-start-game" style="grid-column:span 2;">▶ 操業開始 (10問)</button>
-        <button class="btn secondary" id="btn-open-col">📖 コレクション</button>
-        <button class="btn secondary" id="btn-open-shop">🎰 ガチャをひく</button>
-        <button class="btn secondary" id="btn-open-rank" style="grid-column:span 2;">🏆 報奨金ランキング</button>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:0 4px;">
+        <div style="font-size:14px;font-family:var(--font-d);color:var(--yellow);" id="start-wallet">所持金: ¥0</div>
+        <div style="font-size:11px;color:#aaa;" id="start-daily-earned">本日獲得: ¥0</div>
       </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px; margin-bottom: 10px;">
+        <button class="btn" id="btn-start-game" style="grid-column:span 2; padding:8px;">▶ 操業開始 (10問)</button>
+        <button class="btn secondary" id="btn-open-col" style="padding:8px;">📖 コレクション</button>
+        <button class="btn secondary" id="btn-open-shop" style="padding:8px;">🎰 ガチャ</button>
+        <button class="btn secondary" id="btn-open-rank" style="grid-column:span 2; padding:8px;">🏆 ランキング</button>
+      </div>
+
+      <!-- ランキングの下に配置されたコンパクト掲示板 -->
+      <div class="board-container">
+        <div class="board-header">
+          <span>💬 工場掲示板</span>
+          <button class="btn purple" style="padding:2px 8px; font-size:10px; width:auto;" id="btn-open-board-modal">投稿する</button>
+        </div>
+        <div class="board-messages" id="board-messages-list">
+          <div style="color:#777; font-size:10px; text-align:left; padding:10px;">読み込み中...</div>
+        </div>
+      </div>
+      
     </div>
   </div>
 
@@ -270,15 +335,15 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
       </div>
       <div style="overflow-y:auto; flex:1; width:100%; display:flex; flex-direction:column;" id="col-scroll-area">
         <div id="titles-section" class="hidden">
-          <div class="section-label">🏆 デイリー1位獲得記録</div>
+          <div class="section-label" id="label-daily-titles">🏆 デイリー1位獲得記録</div>
           <div class="grid-container" id="col-daily-title-grid" style="overflow:visible; flex:none;"></div>
-          <div class="section-label" style="margin-top:12px;">🌌 1位限定・天体称号</div>
+          <div class="section-label" style="margin-top:8px;">🌌 1位限定・天体称号</div>
           <div class="grid-container" id="col-title-grid" style="overflow:visible; flex:none;"></div>
-          <div class="section-label" style="margin-top:12px;">🎁 通常コレクション</div>
+          <div class="section-label" style="margin-top:8px;">🎁 通常コレクション</div>
         </div>
         <div class="grid-container" id="col-grid" style="overflow:visible; flex:none;"></div>
       </div>
-      <button class="btn secondary" style="margin-top:10px;" id="btn-col-back">もどる</button>
+      <button class="btn secondary" style="margin-top:8px; padding:8px;" id="btn-col-back">もどる</button>
     </div>
   </div>
 
@@ -286,14 +351,14 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <div class="screen hidden" id="screen-shop">
     <div class="panel-card" style="text-align:center;">
       <div class="panel-title">🎰 コレクションガチャ</div>
-      <div style="font-size:16px;font-family:var(--font-d);color:var(--yellow);margin-bottom:12px;" id="shop-wallet">所持金: ¥0</div>
-      <div style="font-size:56px;margin:12px 0;" id="gacha-anim">🎁</div>
+      <div style="font-size:14px;font-family:var(--font-d);color:var(--yellow);margin-bottom:8px;" id="shop-wallet">所持金: ¥0</div>
+      <div style="font-size:42px;margin:8px 0;" id="gacha-anim">🎁</div>
       
-      <div style="display:flex;flex-direction:column;gap:10px;">
+      <div style="display:flex;flex-direction:column;gap:8px;">
         <button class="btn" id="btn-draw-gacha-1">1回ガチャを引く (¥2,000)</button>
         <button class="btn purple" id="btn-draw-gacha-3">3回連続ガチャ (¥5,000)</button>
       </div>
-      <button class="btn secondary" style="margin-top:12px;" id="btn-shop-back">もどる</button>
+      <button class="btn secondary" style="margin-top:8px; padding:8px;" id="btn-shop-back">もどる</button>
     </div>
   </div>
 
@@ -301,9 +366,9 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <div class="screen hidden" id="screen-rank">
     <div class="panel-card">
       <div class="panel-title">🏆 獲得報奨金ランキング</div>
-      <div style="font-size:10px;color:#aaa;text-align:center;margin-bottom:8px;">※毎日0時(JST)にランキングと本日獲得金がリセットされます<br>※5日連続で非アクティブな工員は除外されます</div>
+      <div style="font-size:9px;color:#aaa;text-align:center;margin-bottom:6px;">※毎日0時(JST)にリセット / 5日非アクティブで除外</div>
       <div class="grid-container" id="rank-list" style="display:block;"></div>
-      <button class="btn secondary" style="margin-top:10px;" id="btn-rank-back">もどる</button>
+      <button class="btn secondary" style="margin-top:8px; padding:8px;" id="btn-rank-back">もどる</button>
     </div>
   </div>
 
@@ -311,11 +376,11 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
   <div class="modal-overlay hidden" id="modal">
     <div class="modal-card">
       <div id="modal-icon-wrap">
-        <div style="font-size:36px;" id="modal-icon">❓</div>
+        <div style="font-size:32px;" id="modal-icon">❓</div>
       </div>
-      <div style="font-size:15px;font-weight:700;color:var(--paper);margin:4px 0;" id="modal-title">---</div>
-      <div style="font-size:11px;color:var(--yellow);margin-bottom:8px;" id="modal-sub">---</div>
-      <div style="font-size:11px;color:#bbb;margin-bottom:14px;width:100%;" id="modal-desc">---</div>
+      <div style="font-size:14px;font-weight:700;color:var(--paper);margin:4px 0;" id="modal-title">---</div>
+      <div style="font-size:10px;color:var(--yellow);margin-bottom:6px;" id="modal-sub">---</div>
+      <div style="font-size:10px;color:#bbb;margin-bottom:10px;width:100%;" id="modal-desc">---</div>
       <div id="modal-actions" style="display:flex;flex-direction:column;gap:6px;width:100%;"></div>
     </div>
   </div>
@@ -327,7 +392,7 @@ input[type="text"]{width:100%;padding:10px;border-radius:6px;border:2px solid #4
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction, 
-  collection, query, orderBy, getDocs 
+  collection, query, orderBy, getDocs, addDoc, limit 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -564,9 +629,7 @@ async function checkTopRankReward(prevMoney, prevDateStr) {
       const topUser = snap.docs[0].data();
       const topMoney = topUser.dailyMoney || 0;
       
-      // 1位の金額が0より大きく、かつ自分の前日の報奨金が最上位の金額と等しい場合（1位タイ含む）のみ付与
       if (topMoney > 0 && prevMoney === topMoney) {
-        // 1. ランダム天体称号の獲得
         const randomTitle = TITLE_BANK[Math.floor(Math.random() * TITLE_BANK.length)];
         if (!currentUser.items) currentUser.items = {};
         if (!currentUser.items[randomTitle.id] || typeof currentUser.items[randomTitle.id] !== 'object') {
@@ -574,7 +637,6 @@ async function checkTopRankReward(prevMoney, prevDateStr) {
         }
         currentUser.items[randomTitle.id].count = (currentUser.items[randomTitle.id].count || 0) + 1;
         
-        // 2. 日付入り限定称号の獲得
         if (!currentUser.dailyTitles) currentUser.dailyTitles = [];
         const formattedDateStr = formatJSTDateLabel(prevDateStr);
         const newDailyTitleName = `${formattedDateStr} 1位`;
@@ -677,6 +739,117 @@ async function checkIncomingPresents(){
   updateUI();
 }
 
+/* --- 掲示板読み込み・投稿機能 --- */
+async function loadBoardMessages() {
+  const container = document.getElementById('board-messages-list');
+  if (!container) return;
+  try {
+    const q = query(collection(db, "board"), orderBy("date", "desc"), limit(15));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      container.innerHTML = '<div style="color:#777; font-size:10px; text-align:left; padding:10px;">まだ投稿はありません</div>';
+      return;
+    }
+    container.innerHTML = '';
+    snap.forEach(docSnap => {
+      const data = docSnap.data();
+      const div = document.createElement('div');
+      div.className = 'board-msg-item';
+      div.innerHTML = `
+        <div class="board-msg-author" style="margin-bottom:2px;">${escapeHtml(data.author)}:</div>
+        <div style="padding-left: 2px;">${escapeHtml(data.message)}</div>
+      `;
+      container.appendChild(div);
+    });
+    applyTwemoji(container);
+  } catch(e) {
+    console.error("掲示板読み込みエラー:", e);
+    container.innerHTML = '<div style="color:var(--red); font-size:10px; text-align:left; padding:10px;">読み込みエラー</div>';
+  }
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+}
+
+function openBoardModal() {
+  enableAudioOnUserGesture();
+  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:32px;">💬</div>`;
+  document.getElementById('modal-title').textContent = '工場掲示板へ投稿';
+  document.getElementById('modal-sub').textContent = '費用: ¥2,000';
+  
+  const descEl = document.getElementById('modal-desc');
+  descEl.innerHTML = `
+    <div style="font-size:10px;color:#aaa;margin-bottom:4px;text-align:left;">全工員に見えるメッセージを残せます（50文字以内）</div>
+    <textarea id="board-msg-input" placeholder="メッセージを入力..." maxlength="50" rows="2"></textarea>
+  `;
+
+  const actions = document.getElementById('modal-actions');
+  actions.innerHTML = '';
+
+  const btnSend = document.createElement('button');
+  btnSend.className = 'btn';
+  btnSend.textContent = '¥2,000払って投稿する';
+  btnSend.onclick = executePostBoard;
+  actions.appendChild(btnSend);
+
+  const btnCancel = document.createElement('button');
+  btnCancel.className = 'btn secondary';
+  btnCancel.textContent = 'キャンセル';
+  btnCancel.onclick = closeModal;
+  actions.appendChild(btnCancel);
+
+  document.getElementById('modal').classList.remove('hidden');
+  applyTwemoji(document.getElementById('modal'));
+}
+
+async function executePostBoard() {
+  const input = document.getElementById('board-msg-input');
+  if (!input) return;
+  const msg = input.value.trim();
+  if (!msg) {
+    alert('メッセージを入力してください。');
+    return;
+  }
+
+  const COST = 2000;
+  if ((currentUser.wallet || 0) < COST) {
+    alert(`所持金が足りません！(¥${COST.toLocaleString()} 必要)`);
+    return;
+  }
+
+  const btn = document.querySelector('#modal-actions .btn');
+  if (btn) {
+    btn.disabled = true;
+    btn.textContent = '投稿中...';
+  }
+
+  try {
+    currentUser.wallet -= COST;
+    await saveUserData();
+
+    await addDoc(collection(db, "board"), {
+      author: currentUser.name,
+      message: msg,
+      date: Date.now()
+    });
+
+    closeModal();
+    alert('💬 掲示板に投稿しました！');
+    updateUI();
+    loadBoardMessages();
+  } catch(e) {
+    console.error("投稿エラー:", e);
+    alert('投稿に失敗しました。');
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = '¥2,000払って投稿する';
+    }
+  }
+}
+
+document.getElementById('btn-open-board-modal').onclick = openBoardModal;
+
 const screens = {
   reg: document.getElementById('screen-reg'),
   start: document.getElementById('screen-start'),
@@ -690,6 +863,9 @@ function showScreen(name){
   Object.values(screens).forEach(s => s.classList.add('hidden'));
   screens[name].classList.remove('hidden');
   updateUI();
+  if (name === 'start') {
+    loadBoardMessages();
+  }
 }
 
 function applyTwemoji(element) {
@@ -706,13 +882,15 @@ function updateUI(){
   
   const rankInfo = getRankInfo(currentUser.totalPlays || 0);
   const walletStr = `所持金: ¥${(currentUser.wallet || 0).toLocaleString()}`;
+  const dailyTitleCount = (currentUser.dailyTitles || []).length;
   
   document.getElementById('user-display-info').textContent = `工員: ${currentUser.name}`;
   document.getElementById('user-rank-badge').textContent = `${rankInfo.icon} ${rankInfo.name} (通算 ${currentUser.totalPlays||0} 回)`;
+  document.getElementById('user-daily-count').textContent = `🥇 デイリー1位獲得: ${dailyTitleCount}回`;
 
   document.getElementById('start-wallet').textContent = walletStr;
   document.getElementById('shop-wallet').textContent = walletStr;
-  document.getElementById('start-daily-earned').textContent = `本日獲得した報奨金: ¥${(currentUser.dailyMoney || 0).toLocaleString()}`;
+  document.getElementById('start-daily-earned').textContent = `本日獲得: ¥${(currentUser.dailyMoney || 0).toLocaleString()}`;
 
   applyTwemoji();
 }
@@ -977,10 +1155,14 @@ function updateColUI(){
   if(currentColTab === 'items'){
     titleSec.classList.remove('hidden');
 
-    // 日付入り1位称号の描画
     const userDailyTitles = targetData.dailyTitles || [];
+    const labelDailyTitles = document.getElementById('label-daily-titles');
+    if (labelDailyTitles) {
+      labelDailyTitles.textContent = `🏆 デイリー1位獲得記録 (累計 ${userDailyTitles.length}回)`;
+    }
+
     if (userDailyTitles.length === 0) {
-      dailyTitleGrid.innerHTML = '<div style="font-size:10px;color:#aaa;grid-column:span 3;text-align:center;padding:6px;">デイリー1位称号はありません</div>';
+      dailyTitleGrid.innerHTML = '<div style="font-size:10px;color:#aaa;grid-column:span 3;text-align:center;padding:4px;">デイリー1位称号はありません</div>';
     } else {
       userDailyTitles.forEach((titleText) => {
         const card = document.createElement('div');
@@ -998,7 +1180,6 @@ function updateColUI(){
       });
     }
 
-    // 天体称号
     TITLE_BANK.forEach(titleItem => {
       const uItem = (targetData.items && targetData.items[titleItem.id]) || { count: 0, giftable: 0 };
       const isOwned = (uItem.count || 0) > 0;
@@ -1019,7 +1200,6 @@ function updateColUI(){
       titleGrid.appendChild(card);
     });
 
-    // 通常コレクション
     ITEM_BANK.forEach(item => {
       const uItem = (targetData.items && targetData.items[item.id]) || { count: 0, giftable: 0 };
       const isOwned = (uItem.count || 0) > 0;
@@ -1065,7 +1245,7 @@ function updateColUI(){
 }
 
 function openDailyTitleModal(titleText) {
-  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:36px;">🏆</div>`;
+  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:32px;">🏆</div>`;
   document.getElementById('modal-title').textContent = titleText;
   document.getElementById('modal-sub').textContent = '【デイリーランキング1位栄誉称号】';
   document.getElementById('modal-desc').textContent = 'その日のデイリーランキングで1位を達成した栄誉ある工員に贈られる特別な記念称号です。';
@@ -1088,7 +1268,7 @@ function openItemModal(item, uItem){
   const numFormatted = item.isTitle ? ('★' + String(item.num).padStart(2, '0')) : ('No.' + String(item.num).padStart(3, '0'));
   const iconWrap = document.getElementById('modal-icon-wrap');
   
-  iconWrap.innerHTML = `<div style="font-size:36px;" id="modal-icon">${isOwned ? item.icon : '❓'}</div>`;
+  iconWrap.innerHTML = `<div style="font-size:32px;" id="modal-icon">${isOwned ? item.icon : '❓'}</div>`;
 
   document.getElementById('modal-title').textContent = isOwned ? `${numFormatted} ${item.name}` : `${numFormatted} ？？？？`;
   document.getElementById('modal-sub').textContent = item.isTitle ? '【デイリー1位限定称号】' : '【コレクションアイテム】';
@@ -1119,18 +1299,17 @@ function closeModal(){
   document.getElementById('modal').classList.add('hidden'); 
 }
 
-/* --- 名前変更処理（消費金額: ¥5,000） --- */
 const RENAME_COST = 5000;
 
 function openRenameModal() {
   enableAudioOnUserGesture();
-  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:36px;">✏️</div>`;
+  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:32px;">✏️</div>`;
   document.getElementById('modal-title').textContent = '工員名の変更';
   document.getElementById('modal-sub').textContent = `必要経費: ¥${RENAME_COST.toLocaleString()}`;
   
   const descEl = document.getElementById('modal-desc');
   descEl.innerHTML = `
-    <div style="font-size:11px;color:#aaa;margin-bottom:8px;">新しい工員名を入力してください（10文字以内）</div>
+    <div style="font-size:10px;color:#aaa;margin-bottom:4px;text-align:left;">新しい工員名を入力してください（10文字以内）</div>
     <input type="text" id="rename-input" placeholder="新しい名前" maxlength="10" value="${currentUser.name}">
   `;
 
@@ -1139,7 +1318,7 @@ function openRenameModal() {
 
   const btnDoRename = document.createElement('button');
   btnDoRename.className = 'btn';
-  btnDoRename.textContent = `¥${RENAME_COST.toLocaleString()}で変更する`;
+  btnDoRename.textContent = `¥${RENAME_COST.toLocaleString()}で変更`;
   btnDoRename.onclick = executeRename;
   actions.appendChild(btnDoRename);
 
@@ -1189,19 +1368,17 @@ async function executeRename() {
       alert('その名前は既に使用されています。別の名前を入力してください。');
       if (btnDoRename) {
         btnDoRename.disabled = false;
-        btnDoRename.textContent = `¥${RENAME_COST.toLocaleString()}で変更する`;
+        btnDoRename.textContent = `¥${RENAME_COST.toLocaleString()}で変更`;
       }
       return;
     }
 
-    // データ複製＆旧データ削除のトランザクション処理
     const oldRef = doc(db, "users", oldName);
     const updatedData = { ...currentUser, name: newCleanName, wallet: currentUser.wallet - RENAME_COST };
 
     await setDoc(newRef, updatedData);
     await deleteDoc(oldRef);
 
-    // ローカルデータの更新
     currentUser = updatedData;
     localStorage.setItem('wf_username', newCleanName);
 
@@ -1213,7 +1390,7 @@ async function executeRename() {
     alert('名前の変更処理に失敗しました。');
     if (btnDoRename) {
       btnDoRename.disabled = false;
-      btnDoRename.textContent = `¥${RENAME_COST.toLocaleString()}で変更する`;
+      btnDoRename.textContent = `¥${RENAME_COST.toLocaleString()}で変更`;
     }
   }
 }
@@ -1262,7 +1439,7 @@ let rankingCache = { data: null, time: 0 };
 
 async function loadRanking(){
   const listEl = document.getElementById('rank-list');
-  listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">読み込み中...</div>';
+  listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:10px;">読み込み中...</div>';
 
   const now = Date.now();
   if(rankingCache.data && (now - rankingCache.time < 180000)){
@@ -1278,7 +1455,7 @@ async function loadRanking(){
     renderRankingList(data);
   } catch(e) {
     console.error("ランキング取得エラー:", e);
-    listEl.innerHTML = '<div style="color:#ff4757;text-align:center;padding:20px;">ランキング取得エラー</div>';
+    listEl.innerHTML = '<div style="color:#ff4757;text-align:center;padding:10px;">ランキング取得エラー</div>';
   }
 }
 
@@ -1294,7 +1471,7 @@ function renderRankingList(data){
   });
 
   if (activeUsers.length === 0) {
-    listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:20px;">アクティブな工員がいません</div>';
+    listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:10px;">アクティブな工員がいません</div>';
     return;
   }
 
@@ -1307,7 +1484,7 @@ function renderRankingList(data){
       <div class="rank-num">#${idx+1}</div>
       <div class="rank-info">
         <div class="rank-name">${u.name}</div>
-        <div style="font-size:10px;color:var(--yellow);">${uRank.icon} ${uRank.name}</div>
+        <div style="font-size:9px;color:var(--yellow);">${uRank.icon} ${uRank.name}</div>
       </div>
       <div class="rank-val">¥${(u.dailyMoney||0).toLocaleString()}</div>
     `;
@@ -1326,7 +1503,7 @@ function openPlayerActionModal(targetUserData) {
   const uRank = getRankInfo(targetUserData.totalPlays || 0);
   const iconWrap = document.getElementById('modal-icon-wrap');
   
-  iconWrap.innerHTML = `<div style="font-size:36px;" id="modal-icon">👤</div>`;
+  iconWrap.innerHTML = `<div style="font-size:32px;" id="modal-icon">👤</div>`;
 
   document.getElementById('modal-title').textContent = targetUserData.name;
   document.getElementById('modal-sub').textContent = `ランク: ${uRank.icon} ${uRank.name} (通算 ${targetUserData.totalPlays||0} 回)`;
@@ -1372,21 +1549,21 @@ function openGiftModal(targetName) {
     return;
   }
 
-  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:36px;">🎁</div>`;
+  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:32px;">🎁</div>`;
   document.getElementById('modal-title').textContent = `工員 [${targetName}] へ贈る`;
-  document.getElementById('modal-sub').textContent = 'プレゼントするアイテムをタップしてください';
+  document.getElementById('modal-sub').textContent = 'プレゼントするアイテムをタップ';
   
   const descEl = document.getElementById('modal-desc');
   descEl.innerHTML = '';
   
   const tileGrid = document.createElement('div');
-  tileGrid.style.cssText = 'display:grid; grid-template-columns:repeat(3, 1fr); gap:8px; max-height:200px; overflow-y:auto; padding:4px; width:100%;';
+  tileGrid.style.cssText = 'display:grid; grid-template-columns:repeat(3, 1fr); gap:6px; max-height:180px; overflow-y:auto; padding:2px; width:100%;';
 
   giftables.forEach(item => {
     const giftableCount = currentUser.items[item.id].giftable;
     const card = document.createElement('div');
     card.className = 'item-card';
-    card.style.cssText = 'cursor:pointer; background:#14161b; border:2px solid var(--purple); border-radius:8px; padding:6px; text-align:center;';
+    card.style.cssText = 'cursor:pointer; background:#14161b; border:2px solid var(--purple); border-radius:6px; padding:4px; text-align:center;';
     card.innerHTML = `
       <div class="item-icon">${item.icon}</div>
       <div class="item-name">${item.name}</div>
