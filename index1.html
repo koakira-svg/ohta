@@ -60,6 +60,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .panel-card{
   background:linear-gradient(180deg,#2a2e37,#1d2027); border:3px solid #464c58; border-radius:14px;
   padding:12px 16px; box-shadow:0 10px 20px rgba(0,0,0,0.6); max-width:440px; width:100%; max-height:96vh; display:flex; flex-direction:column;
+  overflow-y: auto;
 }
 .panel-title{font-family:var(--font-b);font-weight:900;font-size:16px;color:var(--paper);text-align:center;margin-bottom:6px;}
 
@@ -270,10 +271,17 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
         <div style="font-size:11px;color:#aaa;" id="start-daily-earned">本日獲得: ¥0</div>
       </div>
 
-      <!-- コンパクト掲示板 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px; margin-bottom: 10px;">
+        <button class="btn" id="btn-start-game" style="grid-column:span 2; padding:8px;">▶ 操業開始 (10問)</button>
+        <button class="btn secondary" id="btn-open-col" style="padding:8px;">📖 コレクション</button>
+        <button class="btn secondary" id="btn-open-shop" style="padding:8px;">🎰 ガチャ</button>
+        <button class="btn secondary" id="btn-open-rank" style="grid-column:span 2; padding:8px;">🏆 ランキング</button>
+      </div>
+
+      <!-- ランキングの下に配置されたコンパクト掲示板（金額表示なし） -->
       <div class="board-container">
         <div class="board-header">
-          <span>💬 工場掲示板 (1回 ¥2,000)</span>
+          <span>💬 工場掲示板</span>
           <button class="btn purple" style="padding:2px 8px; font-size:10px; width:auto;" id="btn-open-board-modal">投稿する</button>
         </div>
         <div class="board-messages" id="board-messages-list">
@@ -281,12 +289,6 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
         </div>
       </div>
       
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-        <button class="btn" id="btn-start-game" style="grid-column:span 2; padding:8px;">▶ 操業開始 (10問)</button>
-        <button class="btn secondary" id="btn-open-col" style="padding:8px;">📖 コレクション</button>
-        <button class="btn secondary" id="btn-open-shop" style="padding:8px;">🎰 ガチャ</button>
-        <button class="btn secondary" id="btn-open-rank" style="grid-column:span 2; padding:8px;">🏆 ランキング</button>
-      </div>
     </div>
   </div>
 
