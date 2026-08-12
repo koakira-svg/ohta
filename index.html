@@ -223,9 +223,8 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 }
 
 .grid-container{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;padding:4px;width:100%;}
-
-/* 単語図鑑用グリッド（横5列・縦スクロールのみ対応） */
-.word-grid-container{overflow-y:auto;overflow-x:hidden;flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:6px;padding:4px;width:100%;}
+/* 単語図鑑用グリッド（横8列） */
+.word-grid-container{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(8, 1fr);gap:4px;padding:4px;width:100%;}
 
 .item-card{background:#14161b;border:2px solid #3a3f4a;border-radius:8px;padding:6px;text-align:center;position:relative;cursor:pointer;}
 .item-card.locked{opacity:0.5;}
@@ -237,15 +236,17 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .item-name{font-size:10px;color:var(--paper);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .item-count{font-size:9px;color:var(--yellow);}
 
-/* 単語図鑑用タイルカード（横5列対応・シンプルに統一） */
+/* 単語図鑑用タイルカード（横8列対応） */
 .word-tile{
-  background:#14161b; border:2px solid #3a3f4a; border-radius:6px; padding:8px 4px; text-align:center; cursor:pointer;
+  background:#14161b; border:2px solid #3a3f4a; border-radius:6px; padding:4px 2px; text-align:center; cursor:pointer;
   display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:48px;
 }
-.word-tile.rate-0 { background: #1d2027; border-color: #3a3f4a; opacity: 0.6; } /* 未学習 */
+.word-tile.rate-0 { background: #1d2027; border-color: #3a3f4a; } /* 未学習・正解0 */
 .word-tile.rate-1 { background: #3b2a1a; border-color: #8a5a2a; } /* 正解1〜2回 */
 .word-tile.rate-2 { background: #1a3b2a; border-color: #2a8a5a; } /* 正解3〜4回 */
 .word-tile.rate-3 { background: #1a2a4a; border-color: #2a6a8a; } /* 正解5回 */
+.word-tile .word-text { font-size: 9px; color: var(--paper); font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; }
+.word-tile .word-sub { font-size: 8px; color: var(--yellow); font-family: var(--font-m); }
 
 /* 全体達成度バー */
 .achievement-bar-wrap {
@@ -1024,6 +1025,7 @@ function onTimeOut() {
   document.getElementById('hud-combo').textContent = 'x0';
   document.getElementById('hud-miss').textContent = `${game.missCount}/3`;
 
+  // 直近5回の記録更新（タイムアウトは不正解扱い）
   recordWordAttempt(game.currentWord[0], false);
 
   setTimeout(() => {
@@ -1178,6 +1180,7 @@ function onTileClick(tileElem, char){
   }
 }
 
+// 直近5回の正解数を記録する関数（古いデータを破棄し、新しい結果を末尾に追加）
 function recordWordAttempt(word, isSuccess) {
   if (!currentUser.wordStats) currentUser.wordStats = {};
   if (!currentUser.wordStats[word]) currentUser.wordStats[word] = [];
@@ -1232,7 +1235,7 @@ function updateColUI(){
   if(currentColTab === 'items'){
     titleSec.classList.remove('hidden');
     achievementSec.classList.add('hidden');
-    grid.className = 'grid-container';
+    grid.className = 'grid-container'; // 通常の3列グリッド
 
     const userDailyTitles = targetData.dailyTitles || [];
     const labelDailyTitles = document.getElementById('label-daily-titles');
@@ -1300,10 +1303,10 @@ function updateColUI(){
     });
 
   } else {
-    // 単語図鑑タブ（横5列グリッド・縦スクロールのみ、番号・英単語・正解率非表示のシンプルタイル）
+    // 単語図鑑タブ（横8列表示 & 最上段に達成度バーを表示）
     titleSec.classList.add('hidden');
     achievementSec.classList.remove('hidden');
-    grid.className = 'word-grid-container';
+    grid.className = 'word-grid-container'; // 横8列グリッド
 
     let totalLearnedCount = 0;
     const totalWords = WORD_BANK.length;
@@ -1312,10 +1315,12 @@ function updateColUI(){
       const history = (targetData.wordStats && targetData.wordStats[word]) || [];
       const correctCount = history.filter(Boolean).length;
       
+      // 達成度のカウント（正解数が1回以上、または直近で学習できているものをカウント）
       if (correctCount > 0) {
         totalLearnedCount++;
       }
 
+      // 正解数に応じた色分けクラスの決定 (rate-0: 未学習, rate-1: 1-2回, rate-2: 3-4回, rate-3: 5回)
       let rateClass = 'rate-0';
       if (correctCount >= 5) rateClass = 'rate-3';
       else if (correctCount >= 3) rateClass = 'rate-2';
@@ -1323,51 +1328,21 @@ function updateColUI(){
 
       const card = document.createElement('div');
       card.className = `word-tile ${rateClass}`;
-      // 見た目のシンプルさを優先し、タイル内にはテキストを表示せずアイコンや色のみ、またはドット表現にします
       card.innerHTML = `
-        <div style="font-size:16px;">📖</div>
+        <div class="word-sub">${idx + 1}</div>
+        <div class="word-text">${word}</div>
+        <div class="word-sub">${correctCount}/5</div>
       `;
-      
-      // タイルをタップ/クリックすると英単語と日本語がわかるモーダルを表示
-      card.onclick = () => openWordDetailModal(word, jp, correctCount);
-      
       grid.appendChild(card);
     });
 
+    // 達成度バーの更新
     const achievementPct = totalWords > 0 ? Math.floor((totalLearnedCount / totalWords) * 100) : 0;
     document.getElementById('achievement-pct').textContent = `${achievementPct}% (${totalLearnedCount}/${totalWords})`;
     document.getElementById('achievement-fill').style.width = `${achievementPct}%`;
   }
 
   applyTwemoji(document.getElementById('col-scroll-area'));
-}
-
-function openWordDetailModal(word, jp, correctCount) {
-  enableAudioOnUserGesture();
-  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:32px;">🔤</div>`;
-  document.getElementById('modal-title').textContent = correctCount > 0 ? word : "？？？？";
-  document.getElementById('modal-sub').textContent = correctCount > 0 ? `日本語: ${jp}` : "未学習の単語";
-  document.getElementById('modal-desc').textContent = correctCount > 0 ? `直近正解数: ${correctCount}/5` : "操業でこの単語を正解すると詳細が解放されます。";
-
-  const actions = document.getElementById('modal-actions');
-  actions.innerHTML = '';
-
-  if (correctCount > 0) {
-    const btnSpeak = document.createElement('button');
-    btnSpeak.className = 'btn purple';
-    btnSpeak.textContent = '🔊 発音を聞く';
-    btnSpeak.onclick = () => speakWord(word);
-    actions.appendChild(btnSpeak);
-  }
-
-  const btnClose = document.createElement('button');
-  btnClose.className = 'btn secondary';
-  btnClose.textContent = '閉じる';
-  btnClose.onclick = closeModal;
-  actions.appendChild(btnClose);
-
-  document.getElementById('modal').classList.remove('hidden');
-  applyTwemoji(document.getElementById('modal'));
 }
 
 function openDailyTitleModal(titleText) {
