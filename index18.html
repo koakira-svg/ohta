@@ -223,10 +223,6 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 }
 
 .grid-container{overflow-y:auto;flex:1;display:grid;grid-template-columns:repeat(3, 1fr);gap:6px;padding:4px;width:100%;}
-
-/* 単語図鑑用グリッド（横5列・縦スクロールのみ対応） */
-.word-grid-container{overflow-y:auto;overflow-x:hidden;flex:1;display:grid;grid-template-columns:repeat(5, 1fr);gap:6px;padding:4px;width:100%;}
-
 .item-card{background:#14161b;border:2px solid #3a3f4a;border-radius:8px;padding:6px;text-align:center;position:relative;cursor:pointer;}
 .item-card.locked{opacity:0.5;}
 .item-card.locked .item-icon{filter:brightness(0) blur(2px);}
@@ -237,25 +233,37 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .item-name{font-size:10px;color:var(--paper);font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .item-count{font-size:9px;color:var(--yellow);}
 
-/* 単語図鑑用タイル（カード反転アニメーション対応） */
-.word-tile-scene {
-  perspective: 600px;
+/* 単語図鑑専用スタイル (横5列、フリップカード) */
+.word-grid-container {
+  overflow-y: auto;
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 4px;
+  padding: 4px;
   width: 100%;
-  height: 56px;
-  cursor: pointer;
 }
 .word-tile-card {
+  perspective: 1000px;
+  aspect-ratio: 1;
+  cursor: pointer;
+  background: transparent;
+  border: none;
+}
+.word-tile-inner {
+  position: relative;
   width: 100%;
   height: 100%;
-  position: relative;
+  text-align: center;
+  transition: transform 0.4s;
   transform-style: preserve-3d;
-  transition: transform 0.4s ease;
   border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
-.word-tile-card.is-flipped {
+.word-tile-card.flipped .word-tile-inner {
   transform: rotateY(180deg);
 }
-.word-tile-face {
+.word-tile-front, .word-tile-back {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
@@ -264,55 +272,87 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  border: 2px solid #3a3f4a;
   padding: 2px;
+  border: 2px solid rgba(0,0,0,0.2);
 }
 .word-tile-front {
-  background: #14161b;
+  background: var(--steel-800);
   color: var(--paper);
 }
-.word-tile-front.rate-0 { background: #1d2027; border-color: #3a3f4a; opacity: 0.6; }
-.word-tile-front.rate-1 { background: #3b2a1a; border-color: #8a5a2a; }
-.word-tile-front.rate-2 { background: #1a3b2a; border-color: #2a8a5a; }
-.word-tile-front.rate-3 { background: #1a2a4a; border-color: #2a6a8a; }
-
 .word-tile-back {
-  background: #2a2e37;
-  color: var(--yellow);
+  background: var(--paper);
+  color: #1c1c1c;
   transform: rotateY(180deg);
-  border-color: var(--yellow);
+  font-weight: 700;
+}
+.word-tile-front.rate-0 { background: #3a3f4a; color: #8b909c; } /* 未学習・0回 */
+.word-tile-front.rate-1 { background: #7f1d1d; color: #fca5a5; } /* 正解数1 */
+.word-tile-front.rate-2 { background: #78350f; color: #fde68a; } /* 正解数2 */
+.word-tile-front.rate-3 { background: #14532d; color: #86efac; } /* 正解数3 */
+.word-tile-front.rate-4 { background: #065f46; color: #6ee7b7; } /* 正解数4 */
+.word-tile-front.rate-5 { background: #1e3a8a; color: #93c5fd; } /* 正解数5(パーフェクト) */
+
+.word-tile-num {
+  font-family: var(--font-m);
+  font-size: 7px;
+  opacity: 0.8;
+  margin-bottom: 1px;
+}
+.word-tile-text {
+  font-size: 9px;
+  font-weight: 900;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+.word-tile-back-en {
+  font-size: 8px;
+  font-weight: 900;
+  word-break: break-all;
+  line-height: 1.1;
+}
+.word-tile-back-jp {
+  font-size: 7px;
+  opacity: 0.8;
+  word-break: break-all;
+  line-height: 1.1;
+  margin-top: 1px;
 }
 
-/* 全体達成度バー */
-.achievement-bar-wrap {
+/* 全体の達成度バーエリア */
+.achievement-bar-area {
   background: #14161b;
   border: 2px solid #3a3f4a;
   border-radius: 8px;
   padding: 8px;
   margin-bottom: 8px;
   width: 100%;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
-.achievement-info {
+.achievement-header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   font-size: 11px;
-  color: var(--yellow);
   font-weight: 700;
-  margin-bottom: 4px;
+  color: var(--yellow);
 }
-.achievement-progress-bg {
+.achievement-track {
   width: 100%;
   height: 10px;
-  background: #1d2027;
+  background: #2a2e37;
+  border: 1px solid #464c58;
   border-radius: 5px;
   overflow: hidden;
-  border: 1px solid #464c58;
+  position: relative;
 }
-.achievement-progress-fill {
+.achievement-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--blue), var(--green));
   width: 0%;
+  background: linear-gradient(90deg, var(--orange), var(--yellow));
   transition: width 0.3s ease;
 }
 
@@ -398,7 +438,7 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
 
     <div class="order-slip" id="order-slip">
       <div class="order-jp" id="order-jp">...</div>
-      <div class="order-stats" id="order-stats">習熟度: 未学習</div>
+      <div class="order-stats" id="order-stats">直近5回正解数: 0/5</div>
       <button class="btn-speech" id="btn-speech">🔊</button>
     </div>
 
@@ -418,18 +458,6 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
         <button class="tab-btn active" id="tab-btn-items">コレクション</button>
         <button class="tab-btn" id="tab-btn-words">単語図鑑</button>
       </div>
-      
-      <!-- 単語図鑑の最上段に配置する達成度バー -->
-      <div id="word-achievement-section" class="hidden achievement-bar-wrap">
-        <div class="achievement-info">
-          <span>図鑑達成度</span>
-          <span id="achievement-pct">0% (0.0%)</span>
-        </div>
-        <div class="achievement-progress-bg">
-          <div class="achievement-progress-fill" id="achievement-fill"></div>
-        </div>
-      </div>
-
       <div style="overflow-y:auto; flex:1; width:100%; display:flex; flex-direction:column;" id="col-scroll-area">
         <div id="titles-section" class="hidden">
           <div class="section-label" id="label-daily-titles">🏆 デイリー1位獲得記録</div>
@@ -439,6 +467,19 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
           <div class="section-label" style="margin-top:8px;">🎁 通常コレクション</div>
         </div>
         <div class="grid-container" id="col-grid" style="overflow:visible; flex:none;"></div>
+        <!-- 単語図鑑専用の達成度バー＆5列グリッド表示エリア -->
+        <div id="words-section" class="hidden" style="display:flex; flex-direction:column; flex:1; width:100%; overflow:hidden;">
+          <div class="achievement-bar-area">
+            <div class="achievement-header">
+              <span>🏭 全体の達成度</span>
+              <span id="achievement-pct-text">0.0%</span>
+            </div>
+            <div class="achievement-track">
+              <div class="achievement-fill" id="achievement-bar-fill"></div>
+            </div>
+          </div>
+          <div class="word-grid-container" id="word-grid"></div>
+        </div>
       </div>
       <button class="btn secondary" style="margin-top:8px; padding:8px;" id="btn-col-back">もどる</button>
     </div>
@@ -710,6 +751,7 @@ function getDaysDifference(dateStr1, dateStr2) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
+// 1位獲得チェック＆回数カウントアップ処理
 async function checkTopRankReward(prevMoney, prevDateStr) {
   if (prevMoney <= 0) return;
   try {
@@ -785,7 +827,7 @@ async function loadUserData(username){
     if(currentUser.topFirstCount === undefined) currentUser.topFirstCount = 0;
     if(!currentUser.items) currentUser.items = {};
     if(!currentUser.dailyTitles) currentUser.dailyTitles = [];
-    if(!currentUser.wordStats) currentUser.wordStats = {};
+    if(!currentUser.wordResults) currentUser.wordResults = {}; // 直近5回の正解履歴配列を保持するオブジェクト
 
     await checkAndResetDailyData();
   } else {
@@ -798,7 +840,8 @@ async function loadUserData(username){
       lastActiveDate: todayJST,
       items: {},
       dailyTitles: [],
-      wordStats: {}
+      wordStats: {},
+      wordResults: {}
     };
     await setDoc(ref, currentUser);
   }
@@ -836,6 +879,7 @@ async function checkIncomingPresents(){
   updateUI();
 }
 
+/* --- 掲示板読み込み・投稿機能 --- */
 async function loadBoardMessages() {
   const container = document.getElementById('board-messages-list');
   if (!container) return;
@@ -1060,8 +1104,6 @@ function onTimeOut() {
   document.getElementById('hud-combo').textContent = 'x0';
   document.getElementById('hud-miss').textContent = `${game.missCount}/3`;
 
-  recordWordAttempt(game.currentWord[0], false);
-
   setTimeout(() => {
     alert(`⏰ 制限時間切れ！正解は「${game.currentWord[0]}」でした。次の問題へ進みます。`);
     onWordComplete(false);
@@ -1072,8 +1114,9 @@ function selectNextWord(){
   const pool = WORD_BANK.filter(w => !game.recentWords.includes(w[0]));
 
   const candidates = pool.map(w => {
-    const history = (currentUser.wordStats && currentUser.wordStats[w[0]]) || [];
-    const correctCount = history.filter(Boolean).length;
+    if(!currentUser.wordResults) currentUser.wordResults = {};
+    const results = currentUser.wordResults[w[0]] || [];
+    const correctCount = results.filter(Boolean).length;
     const levelDiff = Math.abs(w[2] - game.level);
     const weight = Math.max(1, (5 - correctCount) * 10 + (7 - levelDiff) * 5);
     return { word: w, weight: weight };
@@ -1131,9 +1174,10 @@ async function nextRound(){
   if(game.recentWords.length > 3) game.recentWords.shift();
 
   document.getElementById('order-jp').textContent = wData[1];
-  const history = (currentUser.wordStats && currentUser.wordStats[wData[0]]) || [];
-  const correctCount = history.filter(Boolean).length;
-  document.getElementById('order-stats').textContent = `直近正解数: ${correctCount}/5`;
+  if(!currentUser.wordResults) currentUser.wordResults = {};
+  const results = currentUser.wordResults[wData[0]] || [];
+  const correctCount = results.filter(Boolean).length;
+  document.getElementById('order-stats').textContent = `直近5回正解数: ${correctCount}/5`;
 
   speakWord(wData[0]);
   document.getElementById('btn-speech').onclick = () => speakWord(wData[0]);
@@ -1190,7 +1234,6 @@ function onTileClick(tileElem, char){
 
     if(game.currentSlots.every(s => s.filled)){
       stopTimer();
-      recordWordAttempt(game.currentWord[0], true);
       onWordComplete(true);
     }
   } else {
@@ -1205,7 +1248,6 @@ function onTileClick(tileElem, char){
 
     if(game.missCount >= 3){
       stopTimer();
-      recordWordAttempt(game.currentWord[0], false);
       setTimeout(() => {
         alert(`❌ 3回間違えました！正解は「${game.currentWord[0]}」でした。次の問題へ進みます。`);
         onWordComplete(false);
@@ -1214,18 +1256,16 @@ function onTileClick(tileElem, char){
   }
 }
 
-function recordWordAttempt(word, isSuccess) {
-  if (!currentUser.wordStats) currentUser.wordStats = {};
-  if (!currentUser.wordStats[word]) currentUser.wordStats[word] = [];
-  
-  const history = currentUser.wordStats[word];
-  history.push(isSuccess);
-  if (history.length > 5) {
-    history.shift();
-  }
-}
-
 function onWordComplete(success){
+  const w = game.currentWord[0];
+  if(!currentUser.wordResults) currentUser.wordResults = {};
+  if(!currentUser.wordResults[w]) currentUser.wordResults[w] = [];
+  
+  currentUser.wordResults[w].push(success);
+  if(currentUser.wordResults[w].length > 5) {
+    currentUser.wordResults[w].shift();
+  }
+
   if(success){
     game.combo++;
 
@@ -1256,19 +1296,21 @@ function updateColUI(){
   const titleGrid = document.getElementById('col-title-grid');
   const dailyTitleGrid = document.getElementById('col-daily-title-grid');
   const titleSec = document.getElementById('titles-section');
-  const achievementSec = document.getElementById('word-achievement-section');
+  const wordsSec = document.getElementById('words-section');
+  const wordGrid = document.getElementById('word-grid');
   
   grid.innerHTML = '';
   titleGrid.innerHTML = '';
   dailyTitleGrid.innerHTML = '';
+  wordGrid.innerHTML = '';
 
   const targetData = viewingUserData || currentUser;
   document.getElementById('col-title').textContent = viewingUserData ? `📖 ${viewingUserData.name} のコレクション` : '📖 コレクションノート';
 
   if(currentColTab === 'items'){
     titleSec.classList.remove('hidden');
-    achievementSec.classList.add('hidden');
-    grid.className = 'grid-container';
+    wordsSec.classList.add('hidden');
+    grid.style.display = 'grid';
 
     const userDailyTitles = targetData.dailyTitles || [];
     const labelDailyTitles = document.getElementById('label-daily-titles');
@@ -1336,59 +1378,47 @@ function updateColUI(){
     });
 
   } else {
-    // 単語図鑑タブ
     titleSec.classList.add('hidden');
-    achievementSec.classList.remove('hidden');
-    grid.className = 'word-grid-container';
+    grid.style.display = 'none';
+    wordsSec.classList.remove('hidden');
 
-    const totalWords = WORD_BANK.length;
+    // 全体の達成度計算：全部の問題（WORD_BANK全数）が正解率100%（直近5回すべて正解＝5）の時を100%とする
     let totalScoreSum = 0;
+    const maxPossibleScore = WORD_BANK.length * 5;
 
     WORD_BANK.forEach(([word, jp], idx) => {
-      const history = (targetData.wordStats && targetData.wordStats[word]) || [];
-      const correctCount = history.filter(Boolean).length;
-      
-      const wordRate = Math.min(5, correctCount) / 5;
-      totalScoreSum += wordRate;
+      const results = (targetData.wordResults && targetData.wordResults[word]) || [];
+      const correctCount = results.filter(Boolean).length;
+      totalScoreSum += correctCount;
 
-      let rateClass = 'rate-0';
-      if (correctCount >= 5) rateClass = 'rate-3';
-      else if (correctCount >= 3) rateClass = 'rate-2';
-      else if (correctCount >= 1) rateClass = 'rate-1';
-
-      const scene = document.createElement('div');
-      scene.className = 'word-tile-scene';
+      const numFormatted = 'No.' + String(idx + 1).padStart(3, '0');
+      const rateClass = `rate-${correctCount}`;
 
       const card = document.createElement('div');
       card.className = 'word-tile-card';
-
-      const front = document.createElement('div');
-      front.className = `word-tile-face word-tile-front ${rateClass}`;
-
-      const back = document.createElement('div');
-      back.className = 'word-tile-face word-tile-back';
-      back.innerHTML = `
-        <div style="font-size:9px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;">${correctCount > 0 ? word : '???'}</div>
-        <div style="font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;width:100%;color:#f4ecd8;">${correctCount > 0 ? jp : '未学習'}</div>
+      card.innerHTML = `
+        <div class="word-tile-inner">
+          <div class="word-tile-front ${rateClass}">
+            <div class="word-tile-num">${numFormatted}</div>
+            <div class="word-tile-text">${word}</div>
+          </div>
+          <div class="word-tile-back">
+            <div class="word-tile-back-en">${word}</div>
+            <div class="word-tile-back-jp">${jp}</div>
+          </div>
+        </div>
       `;
 
-      card.appendChild(front);
-      card.appendChild(back);
-      scene.appendChild(card);
-
-      scene.onclick = () => {
-        card.classList.toggle('is-flipped');
-        if (card.classList.contains('is-flipped') && correctCount > 0) {
-          speakWord(word);
-        }
+      card.onclick = () => {
+        card.classList.toggle('flipped');
       };
 
-      grid.appendChild(scene);
+      wordGrid.appendChild(card);
     });
 
-    const achievementPct = totalWords > 0 ? ((totalScoreSum / totalWords) * 100).toFixed(1) : 0;
-    document.getElementById('achievement-pct').textContent = `${achievementPct}%`;
-    document.getElementById('achievement-fill').style.width = `${achievementPct}%`;
+    const achievementPct = maxPossibleScore > 0 ? (totalScoreSum / maxPossibleScore) * 100 : 0;
+    document.getElementById('achievement-pct-text').textContent = `${achievementPct.toFixed(1)}%`;
+    document.getElementById('achievement-bar-fill').style.width = `${achievementPct}%`;
   }
 
   applyTwemoji(document.getElementById('col-scroll-area'));
@@ -1855,3 +1885,4 @@ if(savedName){
 </script>
 </body>
 </html>
+[source: 1]
