@@ -134,7 +134,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
   font-weight: 700;
 }
 .board-messages {
-  max-height: 150px;
+  max-height: 150px; /* ここを75pxから2倍の150pxに変更しました */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
@@ -620,20 +620,16 @@ function getDaysDifference(dateStr1, dateStr2) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// 【修正】ランキング1位チェック＆称号付与処理の堅牢化
 async function checkTopRankReward(prevMoney, prevDateStr) {
   if (prevMoney <= 0) return;
   try {
     const q = query(collection(db, "users"), orderBy("dailyMoney", "desc"));
     const snap = await getDocs(q);
     if (!snap.empty) {
-      // データベース上のトップユーザーを取得
-      const topDoc = snap.docs[0];
-      const topUser = topDoc.data();
+      const topUser = snap.docs[0].data();
       const topMoney = topUser.dailyMoney || 0;
       
-      // 自分が前日に稼いだ金額がトップのものと一致するか、あるいは自分が最高額保持者である場合
-      if (topMoney > 0 && prevMoney >= topMoney && topUser.name === currentUser.name) {
+      if (topMoney > 0 && prevMoney === topMoney && topUser.name === currentUser.name) {
         const randomTitle = TITLE_BANK[Math.floor(Math.random() * TITLE_BANK.length)];
         if (!currentUser.items) currentUser.items = {};
         if (!currentUser.items[randomTitle.id] || typeof currentUser.items[randomTitle.id] !== 'object') {
@@ -667,11 +663,10 @@ async function checkAndResetDailyData() {
     const prevMoney = currentUser.dailyMoney || 0;
     const prevDateStr = currentUser.lastActiveDate || todayJST;
     
-    // 先に1位報酬のチェックを実行（リセット前に評価する）[span_1](start_span)[span_1](end_span)
-    await checkTopRankReward(prevMoney, prevDateStr);
-    
     currentUser.dailyMoney = 0;
     currentUser.lastActiveDate = todayJST;
+    
+    await checkTopRankReward(prevMoney, prevDateStr);
     
     const ref = doc(db, "users", currentUser.name);
     await updateDoc(ref, { 
