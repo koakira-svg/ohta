@@ -236,9 +236,7 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .ranking-item{display:flex;align-items:center;justify-content:space-between;padding:6px 8px;background:#14161b;border:1px solid #3a3f4a;border-radius:6px;margin-bottom:4px;}
 .rank-num{font-family:var(--font-d);font-size:13px;color:var(--yellow);width:24px;}
 .rank-info{flex:1;text-align:left;display:flex;flex-direction:column;gap:1px;}
-.rank-name-row { display: flex; align-items: center; gap: 6px; }
 .rank-name{font-size:11px;color:var(--paper);font-weight:700;}
-.rank-top-badge { font-size: 9px; color: var(--yellow); background: rgba(255, 199, 44, 0.15); border: 1px solid var(--yellow); padding: 1px 4px; border-radius: 4px; font-weight: 700; }
 .rank-val{font-family:var(--font-m);font-size:11px;color:var(--green);text-align:right;}
 
 /* Modal */
@@ -622,21 +620,20 @@ function getDaysDifference(dateStr1, dateStr2) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// 1位獲得チェック＆回数カウントアップ処理
+// 【修正】ランキング1位チェック＆称号付与処理の堅牢化
 async function checkTopRankReward(prevMoney, prevDateStr) {
   if (prevMoney <= 0) return;
   try {
     const q = query(collection(db, "users"), orderBy("dailyMoney", "desc"));
     const snap = await getDocs(q);
     if (!snap.empty) {
+      // データベース上のトップユーザーを取得
       const topDoc = snap.docs[0];
       const topUser = topDoc.data();
       const topMoney = topUser.dailyMoney || 0;
       
+      // 自分が前日に稼いだ金額がトップのものと一致するか、あるいは自分が最高額保持者である場合
       if (topMoney > 0 && prevMoney >= topMoney && topUser.name === currentUser.name) {
-        // 1位獲得回数をインクリメント
-        currentUser.topFirstCount = (currentUser.topFirstCount || 0) + 1;
-
         const randomTitle = TITLE_BANK[Math.floor(Math.random() * TITLE_BANK.length)];
         if (!currentUser.items) currentUser.items = {};
         if (!currentUser.items[randomTitle.id] || typeof currentUser.items[randomTitle.id] !== 'object') {
@@ -653,7 +650,7 @@ async function checkTopRankReward(prevMoney, prevDateStr) {
         }
 
         setTimeout(() => {
-          alert(`🏆【${formattedDateStr}】のデイリーランキングで1位を獲得しました！\n\n・累計1位獲得回数: ${currentUser.topFirstCount}回\n・限定称号: 【🥇 ${newDailyTitleName}】\n・天体特別称号: 【${randomTitle.icon} ${randomTitle.name}】\nを獲得しました！`);
+          alert(`🏆【${formattedDateStr}】のデイリーランキングで1位を獲得しました！\n\n・限定称号: 【🥇 ${newDailyTitleName}】\n・天体特別称号: 【${randomTitle.icon} ${randomTitle.name}】\nを獲得しました！`);
         }, 800);
       }
     }
@@ -670,6 +667,7 @@ async function checkAndResetDailyData() {
     const prevMoney = currentUser.dailyMoney || 0;
     const prevDateStr = currentUser.lastActiveDate || todayJST;
     
+    // 先に1位報酬のチェックを実行（リセット前に評価する）[span_1](start_span)[span_1](end_span)
     await checkTopRankReward(prevMoney, prevDateStr);
     
     currentUser.dailyMoney = 0;
@@ -680,8 +678,7 @@ async function checkAndResetDailyData() {
       dailyMoney: 0, 
       lastActiveDate: todayJST, 
       items: currentUser.items || {},
-      dailyTitles: currentUser.dailyTitles || [],
-      topFirstCount: currentUser.topFirstCount || 0
+      dailyTitles: currentUser.dailyTitles || []
     });
   }
 }
@@ -696,7 +693,6 @@ async function loadUserData(username){
     currentUser = snap.data();
     if(currentUser.wallet === undefined) currentUser.wallet = currentUser.dailyMoney || 0;
     if(currentUser.totalPlays === undefined) currentUser.totalPlays = 0;
-    if(currentUser.topFirstCount === undefined) currentUser.topFirstCount = 0;
     if(!currentUser.items) currentUser.items = {};
     if(!currentUser.dailyTitles) currentUser.dailyTitles = [];
 
@@ -707,7 +703,6 @@ async function loadUserData(username){
       totalPlays: 0,
       wallet: 0,
       dailyMoney: 0,
-      topFirstCount: 0,
       lastActiveDate: todayJST,
       items: {},
       dailyTitles: [],
@@ -892,11 +887,11 @@ function updateUI(){
   
   const rankInfo = getRankInfo(currentUser.totalPlays || 0);
   const walletStr = `所持金: ¥${(currentUser.wallet || 0).toLocaleString()}`;
-  const topFirstCount = currentUser.topFirstCount || 0;
+  const dailyTitleCount = (currentUser.dailyTitles || []).length;
   
   document.getElementById('user-display-info').textContent = `工員: ${currentUser.name}`;
   document.getElementById('user-rank-badge').textContent = `${rankInfo.icon} ${rankInfo.name} (通算 ${currentUser.totalPlays||0} 回)`;
-  document.getElementById('user-daily-count').textContent = `🥇 デイリー1位獲得: ${topFirstCount}回`;
+  document.getElementById('user-daily-count').textContent = `🥇 デイリー1位獲得: ${dailyTitleCount}回`;
 
   document.getElementById('start-wallet').textContent = walletStr;
   document.getElementById('shop-wallet').textContent = walletStr;
@@ -1501,20 +1496,15 @@ function renderRankingList(data){
 
   activeUsers.forEach((u, idx) => {
     const uRank = getRankInfo(u.totalPlays || 0);
-    const topFirstCount = u.topFirstCount || 0;
     const item = document.createElement('div');
     item.className = 'ranking-item';
 
     const displayDailyMoney = (u.lastActiveDate === todayJST) ? (u.dailyMoney || 0) : 0;
 
-    // 名前横に1位獲得回数（topFirstCount）のバッジを表示する仕組み
     item.innerHTML = `
       <div class="rank-num">#${idx+1}</div>
       <div class="rank-info">
-        <div class="rank-name-row">
-          <span class="rank-name">${u.name}</span>
-          ${topFirstCount > 0 ? `<span class="rank-top-badge">🥇 1位獲得: ${topFirstCount}回</span>` : ''}
-        </div>
+        <div class="rank-name">${u.name}</div>
         <div style="font-size:9px;color:var(--yellow);">${uRank.icon} ${uRank.name}</div>
       </div>
       <div class="rank-val">¥${displayDailyMoney.toLocaleString()}</div>
