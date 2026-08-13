@@ -364,6 +364,41 @@ button{font-family:var(--font-d);cursor:pointer;border:none;outline:none;}
 .rank-top-badge { font-size: 9px; color: var(--yellow); background: rgba(255, 199, 44, 0.15); border: 1px solid var(--yellow); padding: 1px 4px; border-radius: 4px; font-weight: 700; }
 .rank-val{font-family:var(--font-m);font-size:11px;color:var(--green);text-align:right;}
 
+/* 直近1位履歴用のスタイル */
+.recent-top-container {
+  background: #14161b;
+  border: 2px solid var(--yellow);
+  border-radius: 8px;
+  padding: 6px;
+  margin-bottom: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.recent-top-header {
+  font-size: 11px;
+  color: var(--yellow);
+  font-weight: 700;
+  text-align: left;
+}
+.recent-top-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 120px;
+  overflow-y: auto;
+}
+.recent-top-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  background: #1d2027;
+  padding: 3px 6px;
+  border-radius: 4px;
+  color: var(--paper);
+}
+
 /* Modal */
 .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.8);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;}
 .modal-card{background:#2a2e37;border:3px solid #464c58;border-radius:14px;padding:16px;max-width:380px;width:100%;text-align:center;max-height:85vh;display:flex;flex-direction:column;align-items:center;}
@@ -394,7 +429,7 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
           <button class="btn-edit-name" id="btn-open-rename-modal" title="名前を変更する">✏️</button>
         </div>
         <div id="user-rank-badge" class="rank-badge">🌱 見習い工員</div>
-        <div id="user-daily-count" class="daily-title-badge">🥇 デイリー1位獲得: 0回</div>
+        <div id="user-daily-count" class="daily-title-badge" style="display:none;"></div>
       </div>
 
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; padding:0 4px;">
@@ -460,11 +495,11 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
       </div>
       <div style="overflow-y:auto; flex:1; width:100%; display:flex; flex-direction:column;" id="col-scroll-area">
         <div id="titles-section" class="hidden">
-          <div class="section-label" id="label-daily-titles">🏆 デイリー1位獲得記録</div>
-          <div class="grid-container" id="col-daily-title-grid" style="overflow:visible; flex:none;"></div>
-          <div class="section-label" style="margin-top:8px;">🌌 1位限定・天体称号</div>
-          <div class="grid-container" id="col-title-grid" style="overflow:visible; flex:none;"></div>
-          <div class="section-label" style="margin-top:8px;">🎁 通常コレクション</div>
+          <div class="section-label" id="label-daily-titles" style="display:none;"></div>
+          <div class="grid-container" id="col-daily-title-grid" style="display:none;"></div>
+          <div class="section-label" style="display:none;"></div>
+          <div class="grid-container" id="col-title-grid" style="display:none;"></div>
+          <div class="section-label" style="margin-top:4px;">🎁 通常コレクション</div>
         </div>
         <div class="grid-container" id="col-grid" style="overflow:visible; flex:none;"></div>
         <!-- 単語図鑑専用の達成度バー＆5列グリッド表示エリア -->
@@ -505,6 +540,15 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
     <div class="panel-card">
       <div class="panel-title">🏆 獲得報奨金ランキング</div>
       <div style="font-size:9px;color:#aaa;text-align:center;margin-bottom:6px;">※毎日0時(JST)にリセット / 5日非アクティブで除外</div>
+      
+      <!-- 直近5日分の1位記録表示エリア -->
+      <div class="recent-top-container" id="recent-top-container">
+        <div class="recent-top-header">👑 直近の1位記録 (過去5日分)</div>
+        <div class="recent-top-list" id="recent-top-list">
+          <div style="color:#777; font-size:10px; text-align:center; padding:4px;">読み込み中...</div>
+        </div>
+      </div>
+
       <div class="grid-container" id="rank-list" style="display:block;"></div>
       <button class="btn secondary" style="margin-top:8px; padding:8px;" id="btn-rank-back">もどる</button>
     </div>
@@ -530,7 +574,7 @@ input[type="text"], textarea{width:100%;padding:8px;border-radius:6px;border:2px
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
 import { 
   getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, runTransaction, 
-  collection, query, orderBy, getDocs, addDoc, limit 
+  collection, query, orderBy, getDocs, addDoc, limit, setLogLevel 
 } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -648,15 +692,6 @@ function getRankInfo(totalPlays = 0) {
   return currentRank;
 }
 
-const TITLE_BANK = [
-  { id: 'title_1', num: 1, name: '銀河の支配者', icon: '🌌', desc: '【デイリー1位限定称号】無数の星々を統べる銀河の王者。', isTitle: true },
-  { id: 'title_2', num: 2, name: '超新星の輝き', icon: '🌟', desc: '【デイリー1位限定称号】宇宙を眩しく照らす圧巻の輝き。', isTitle: true },
-  { id: 'title_3', num: 3, name: '彗星の流星子', icon: '☄️', desc: '【デイリー1位限定称号】漆黒の闇を切り裂く奇跡の尾。', isTitle: true },
-  { id: 'title_4', num: 4, name: '土星の輪の主', icon: '🪐', desc: '【デイリー1位限定称号】神秘的な環を身に纏う幻想の主。', isTitle: true },
-  { id: 'title_5', num: 5, name: '皆秘日食の影', icon: '🌑', desc: '【デイリー1位限定称号】太陽をも覆い隠す圧倒的な存在感。', isTitle: true },
-  { id: 'title_6', num: 6, name: '流星群の導き', icon: '🌠', desc: '【デイリー1位限定称号】願いを乗せて降り注ぐ星々の指導者。', isTitle: true }
-];
-
 const ITEM_BANK = [];
 const friendlyItems = [
   { name: '犬', icon: '🐶', desc: '人懐っこくて元気いっぱいなワンちゃん。' },
@@ -737,12 +772,6 @@ function getJSTDateStr(dateObj = new Date()) {
   return `${year}-${month}-${day}`;
 }
 
-function formatJSTDateLabel(dateStr) {
-  if (!dateStr) return '';
-  const [y, m, d] = dateStr.split('-');
-  return `${y}年${parseInt(m, 10)}月${parseInt(d, 10)}日`;
-}
-
 function getDaysDifference(dateStr1, dateStr2) {
   if (!dateStr1 || !dateStr2) return 999;
   const d1 = new Date(dateStr1);
@@ -751,55 +780,11 @@ function getDaysDifference(dateStr1, dateStr2) {
   return Math.floor(diffTime / (1000 * 60 * 60 * 24));
 }
 
-// 1位獲得チェック＆回数カウントアップ処理
-async function checkTopRankReward(prevMoney, prevDateStr) {
-  if (prevMoney <= 0) return;
-  try {
-    const q = query(collection(db, "users"), orderBy("dailyMoney", "desc"));
-    const snap = await getDocs(q);
-    if (!snap.empty) {
-      const topDoc = snap.docs[0];
-      const topUser = topDoc.data();
-      const topMoney = topUser.dailyMoney || 0;
-      
-      if (topMoney > 0 && prevMoney >= topMoney && topUser.name === currentUser.name) {
-        currentUser.topFirstCount = (currentUser.topFirstCount || 0) + 1;
-
-        const randomTitle = TITLE_BANK[Math.floor(Math.random() * TITLE_BANK.length)];
-        if (!currentUser.items) currentUser.items = {};
-        if (!currentUser.items[randomTitle.id] || typeof currentUser.items[randomTitle.id] !== 'object') {
-          currentUser.items[randomTitle.id] = { count: 0, giftable: 0 };
-        }
-        currentUser.items[randomTitle.id].count = (currentUser.items[randomTitle.id].count || 0) + 1;
-        
-        if (!currentUser.dailyTitles) currentUser.dailyTitles = [];
-        const formattedDateStr = formatJSTDateLabel(prevDateStr);
-        const newDailyTitleName = `${formattedDateStr} 1位`;
-        
-        if (!currentUser.dailyTitles.includes(newDailyTitleName)) {
-          currentUser.dailyTitles.push(newDailyTitleName);
-        }
-
-        setTimeout(() => {
-          alert(`🏆【${formattedDateStr}】のデイリーランキングで1位を獲得しました！\n\n・累計1位獲得回数: ${currentUser.topFirstCount}回\n・限定称号: 【🥇 ${newDailyTitleName}】\n・天体特別称号: 【${randomTitle.icon} ${randomTitle.name}】\nを獲得しました！`);
-        }, 800);
-      }
-    }
-  } catch(e) {
-    console.error("1位チェックエラー:", e);
-  }
-}
-
 async function checkAndResetDailyData() {
   if (!currentUser) return;
   const todayJST = getJSTDateStr();
   
   if (currentUser.lastActiveDate !== todayJST) {
-    const prevMoney = currentUser.dailyMoney || 0;
-    const prevDateStr = currentUser.lastActiveDate || todayJST;
-    
-    await checkTopRankReward(prevMoney, prevDateStr);
-    
     currentUser.dailyMoney = 0;
     currentUser.lastActiveDate = todayJST;
     
@@ -807,9 +792,7 @@ async function checkAndResetDailyData() {
     await updateDoc(ref, { 
       dailyMoney: 0, 
       lastActiveDate: todayJST, 
-      items: currentUser.items || {},
-      dailyTitles: currentUser.dailyTitles || [],
-      topFirstCount: currentUser.topFirstCount || 0
+      items: currentUser.items || {}
     });
   }
 }
@@ -824,10 +807,8 @@ async function loadUserData(username){
     currentUser = snap.data();
     if(currentUser.wallet === undefined) currentUser.wallet = currentUser.dailyMoney || 0;
     if(currentUser.totalPlays === undefined) currentUser.totalPlays = 0;
-    if(currentUser.topFirstCount === undefined) currentUser.topFirstCount = 0;
     if(!currentUser.items) currentUser.items = {};
-    if(!currentUser.dailyTitles) currentUser.dailyTitles = [];
-    if(!currentUser.wordResults) currentUser.wordResults = {}; // 直近5回の正解履歴配列を保持するオブジェクト
+    if(!currentUser.wordResults) currentUser.wordResults = {};
 
     await checkAndResetDailyData();
   } else {
@@ -836,10 +817,8 @@ async function loadUserData(username){
       totalPlays: 0,
       wallet: 0,
       dailyMoney: 0,
-      topFirstCount: 0,
       lastActiveDate: todayJST,
       items: {},
-      dailyTitles: [],
       wordStats: {},
       wordResults: {}
     };
@@ -1022,11 +1001,9 @@ function updateUI(){
   
   const rankInfo = getRankInfo(currentUser.totalPlays || 0);
   const walletStr = `所持金: ¥${(currentUser.wallet || 0).toLocaleString()}`;
-  const topFirstCount = currentUser.topFirstCount || 0;
   
   document.getElementById('user-display-info').textContent = `工員: ${currentUser.name}`;
   document.getElementById('user-rank-badge').textContent = `${rankInfo.icon} ${rankInfo.name} (通算 ${currentUser.totalPlays||0} 回)`;
-  document.getElementById('user-daily-count').textContent = `🥇 デイリー1位獲得: ${topFirstCount}回`;
 
   document.getElementById('start-wallet').textContent = walletStr;
   document.getElementById('shop-wallet').textContent = walletStr;
@@ -1293,15 +1270,11 @@ function updateColUI(){
   document.getElementById('tab-btn-words').classList.toggle('active', currentColTab==='words');
   
   const grid = document.getElementById('col-grid');
-  const titleGrid = document.getElementById('col-title-grid');
-  const dailyTitleGrid = document.getElementById('col-daily-title-grid');
   const titleSec = document.getElementById('titles-section');
   const wordsSec = document.getElementById('words-section');
   const wordGrid = document.getElementById('word-grid');
   
   grid.innerHTML = '';
-  titleGrid.innerHTML = '';
-  dailyTitleGrid.innerHTML = '';
   wordGrid.innerHTML = '';
 
   const targetData = viewingUserData || currentUser;
@@ -1311,51 +1284,6 @@ function updateColUI(){
     titleSec.classList.remove('hidden');
     wordsSec.classList.add('hidden');
     grid.style.display = 'grid';
-
-    const userDailyTitles = targetData.dailyTitles || [];
-    const labelDailyTitles = document.getElementById('label-daily-titles');
-    if (labelDailyTitles) {
-      labelDailyTitles.textContent = `🏆 デイリー1位獲得記録 (累計 ${userDailyTitles.length}回)`;
-    }
-
-    if (userDailyTitles.length === 0) {
-      dailyTitleGrid.innerHTML = '<div style="font-size:10px;color:#aaa;grid-column:span 3;text-align:center;padding:4px;">デイリー1位称号はありません</div>';
-    } else {
-      userDailyTitles.forEach((titleText) => {
-        const card = document.createElement('div');
-        card.className = 'item-card daily-first-card';
-        card.innerHTML = `
-          <div class="item-num">🥇 DAY-1</div>
-          <div class="item-icon">🏆</div>
-          <div class="item-name">${titleText}</div>
-          <div class="item-count">獲得済</div>
-        `;
-        if (!viewingUserData) {
-          card.onclick = () => openDailyTitleModal(titleText);
-        }
-        dailyTitleGrid.appendChild(card);
-      });
-    }
-
-    TITLE_BANK.forEach(titleItem => {
-      const uItem = (targetData.items && targetData.items[titleItem.id]) || { count: 0, giftable: 0 };
-      const isOwned = (uItem.count || 0) > 0;
-      const numFormatted = '★' + String(titleItem.num).padStart(2, '0');
-
-      const card = document.createElement('div');
-      card.className = 'item-card title-card ' + (isOwned ? '' : 'locked');
-
-      card.innerHTML = `
-        <div class="item-num">${numFormatted}</div>
-        <div class="item-icon">${titleItem.icon}</div>
-        <div class="item-name">${isOwned ? titleItem.name : '？？？？'}</div>
-        <div class="item-count">${isOwned ? '獲得:'+uItem.count : '未獲得'}</div>
-      `;
-      if (!viewingUserData) {
-        card.onclick = () => openItemModal(titleItem, uItem);
-      }
-      titleGrid.appendChild(card);
-    });
 
     ITEM_BANK.forEach(item => {
       const uItem = (targetData.items && targetData.items[item.id]) || { count: 0, giftable: 0 };
@@ -1382,7 +1310,6 @@ function updateColUI(){
     grid.style.display = 'none';
     wordsSec.classList.remove('hidden');
 
-    // 全体の達成度計算：全部の問題（WORD_BANK全数）が正解率100%（直近5回すべて正解＝5）の時を100%とする
     let totalScoreSum = 0;
     const maxPossibleScore = WORD_BANK.length * 5;
 
@@ -1424,40 +1351,21 @@ function updateColUI(){
   applyTwemoji(document.getElementById('col-scroll-area'));
 }
 
-function openDailyTitleModal(titleText) {
-  document.getElementById('modal-icon-wrap').innerHTML = `<div style="font-size:32px;">🏆</div>`;
-  document.getElementById('modal-title').textContent = titleText;
-  document.getElementById('modal-sub').textContent = '【デイリーランキング1位栄誉称号】';
-  document.getElementById('modal-desc').textContent = 'その日のデイリーランキングで1位を達成した栄誉ある工員に贈られる特別な記念称号です。';
-
-  const actions = document.getElementById('modal-actions');
-  actions.innerHTML = '';
-
-  const btnClose = document.createElement('button');
-  btnClose.className = 'btn secondary';
-  btnClose.textContent = '閉じる';
-  btnClose.onclick = closeModal;
-  actions.appendChild(btnClose);
-
-  document.getElementById('modal').classList.remove('hidden');
-  applyTwemoji(document.getElementById('modal'));
-}
-
 function openItemModal(item, uItem){
   const isOwned = (uItem.count || 0) > 0;
-  const numFormatted = item.isTitle ? ('★' + String(item.num).padStart(2, '0')) : ('No.' + String(item.num).padStart(3, '0'));
+  const numFormatted = 'No.' + String(item.num).padStart(3, '0');
   const iconWrap = document.getElementById('modal-icon-wrap');
   
   iconWrap.innerHTML = `<div style="font-size:32px;" id="modal-icon">${isOwned ? item.icon : '❓'}</div>`;
 
   document.getElementById('modal-title').textContent = isOwned ? `${numFormatted} ${item.name}` : `${numFormatted} ？？？？`;
-  document.getElementById('modal-sub').textContent = item.isTitle ? '【デイリー1位限定称号】' : '【コレクションアイテム】';
-  document.getElementById('modal-desc').textContent = isOwned ? item.desc : (item.isTitle ? 'デイリーランキング1位になるとランダムで獲得できます。' : 'ガチャで獲得できます。');
+  document.getElementById('modal-sub').textContent = '【コレクションアイテム】';
+  document.getElementById('modal-desc').textContent = isOwned ? item.desc : 'ガチャで獲得できます。';
 
   const actions = document.getElementById('modal-actions');
   actions.innerHTML = '';
 
-  if(!item.isTitle && isOwned && (uItem.giftable || 0) > 0){
+  if(isOwned && (uItem.giftable || 0) > 0){
     const btnGift = document.createElement('button');
     btnGift.className = 'btn purple';
     btnGift.textContent = `🎁 他の工員に贈る (残り:${uItem.giftable}回)`;
@@ -1619,7 +1527,9 @@ let rankingCache = { data: null, time: 0 };
 
 async function loadRanking(){
   const listEl = document.getElementById('rank-list');
+  const recentListEl = document.getElementById('recent-top-list');
   listEl.innerHTML = '<div style="color:#aaa;text-align:center;padding:10px;">読み込み中...</div>';
+  recentListEl.innerHTML = '<div style="color:#777; font-size:10px; text-align:center; padding:4px;">読み込み中...</div>';
 
   try {
     const q = query(collection(db, "users"), orderBy("dailyMoney", "desc"));
@@ -1629,7 +1539,23 @@ async function loadRanking(){
     const data = [];
     for (const docSnap of snap.docs) {
       let uData = docSnap.data();
-      if (uData.lastActiveDate !== todayJST && (uData.dailyMoney || 0) > 0) {
+      // 日付が変更している場合、リセット前に前日の1位記録として保存処理を実施する
+      if (uData.lastActiveDate && uData.lastActiveDate !== todayJST) {
+        const prevDate = uData.lastActiveDate;
+        const prevDailyMoney = uData.dailyMoney || 0;
+        
+        if (prevDailyMoney > 0) {
+          const topRecordRef = doc(db, "rankHistory", prevDate);
+          const topRecordSnap = await getDoc(topRecordRef);
+          if (!topRecordSnap.exists()) {
+            await setDoc(topRecordRef, {
+              date: prevDate,
+              name: uData.name,
+              dailyMoney: prevDailyMoney
+            });
+          }
+        }
+
         uData.dailyMoney = 0;
         uData.lastActiveDate = todayJST;
         await updateDoc(docSnap.ref, { dailyMoney: 0, lastActiveDate: todayJST });
@@ -1641,9 +1567,37 @@ async function loadRanking(){
 
     rankingCache = { data: data, time: Date.now() };
     renderRankingList(data);
+    loadRecentTopHistory();
   } catch(e) {
     console.error("ランキング取得エラー:", e);
     listEl.innerHTML = '<div style="color:#ff4757;text-align:center;padding:10px;">ランキング取得エラー</div>';
+    recentListEl.innerHTML = '<div style="color:#ff4757; font-size:10px; text-align:center; padding:4px;">取得エラー</div>';
+  }
+}
+
+async function loadRecentTopHistory() {
+  const recentListEl = document.getElementById('recent-top-list');
+  try {
+    const q = query(collection(db, "rankHistory"), orderBy("date", "desc"), limit(5));
+    const snap = await getDocs(q);
+    if (snap.empty) {
+      recentListEl.innerHTML = '<div style="color:#777; font-size:10px; text-align:center; padding:4px;">直近の1位記録はありません</div>';
+      return;
+    }
+    recentListEl.innerHTML = '';
+    snap.forEach(docSnap => {
+      const h = docSnap.data();
+      const item = document.createElement('div');
+      item.className = 'recent-top-item';
+      item.innerHTML = `
+        <span>📅 ${h.date} - <b>${h.name}</b></span>
+        <span style="color:var(--green); font-family:var(--font-m);">¥${(h.dailyMoney || 0).toLocaleString()}</span>
+      `;
+      recentListEl.appendChild(item);
+    });
+  } catch(e) {
+    console.error("直近1位履歴取得エラー:", e);
+    recentListEl.innerHTML = '<div style="color:#ff4757; font-size:10px; text-align:center; padding:4px;">履歴取得エラー</div>';
   }
 }
 
@@ -1665,7 +1619,6 @@ function renderRankingList(data){
 
   activeUsers.forEach((u, idx) => {
     const uRank = getRankInfo(u.totalPlays || 0);
-    const topFirstCount = u.topFirstCount || 0;
     const item = document.createElement('div');
     item.className = 'ranking-item';
 
@@ -1676,7 +1629,6 @@ function renderRankingList(data){
       <div class="rank-info">
         <div class="rank-name-row">
           <span class="rank-name">${u.name}</span>
-          ${topFirstCount > 0 ? `<span class="rank-top-badge">🥇 1位獲得: ${topFirstCount}回</span>` : ''}
         </div>
         <div style="font-size:9px;color:var(--yellow);">${uRank.icon} ${uRank.name}</div>
       </div>
@@ -1885,4 +1837,3 @@ if(savedName){
 </script>
 </body>
 </html>
-[source: 1]
